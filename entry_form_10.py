@@ -1,5 +1,4 @@
 import tkinter
-
 import mysql.connector
 from mysql.connector import Error
 import tkinter as tk
@@ -8,11 +7,13 @@ from datetime import datetime
 import tkinter.font as tkFont
 
 total_sum = 0.0
-my_host = '127.0.0.1'
-my_port = '3306'
-my_user = 'root'
-my_pass = '////'
-my_db = 'nadejda-94'
+dict_connection = {
+    'host': '127.0.0.1',
+    'port': '3306',
+    'user': 'root',
+    'password': '++++',
+    'database': 'nadejda-94'
+}
 
 # get balance of firms from database
 def get_open_balance():
@@ -340,7 +341,7 @@ tree_day_report.heading('firm', text='Фирма', anchor=tk.CENTER)
 tree_day_report.heading('action', text='Действие', anchor=tk.CENTER)
 tree_day_report.heading('ammount', text='Сума', anchor=tk.CENTER)
 tree_day_report.heading('note', text='Забележка', anchor=tk.CENTER)
-connection = mysql.connector.connect(host=my_host, port=my_port, user=my_user, password=my_pass, database=my_db)
+connection = mysql.connector.connect(**dict_connection)
 cursor = connection.cursor()
 cursor.execute("SELECT partner.partner_name, records.order_type, records.ammount, records.note FROM records INNER"
                " JOIN partner ON records.partner_id = partner.partner_id"
