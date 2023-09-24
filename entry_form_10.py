@@ -21,7 +21,7 @@ def get_open_balance():
     if firm == 'Клиент' or firm == 'Доставчик':
         open_balance = 0
     else:
-        connection = mysql.connector.connect(host=my_host, port=my_port, user=my_user, password=my_pass, database=my_db)
+        connection = mysql.connector.connect(**dict_connection)
         cursor = connection.cursor()
         sql = "SELECT partner_balance FROM partner WHERE partner_name = %s"
         cursor.execute(sql, firm)
@@ -32,7 +32,7 @@ def get_open_balance():
 
 # get id of firms from database
 def get_id():
-    connection = mysql.connector.connect(host=my_host, port=my_port, user=my_user, password=my_pass, database=my_db)
+    connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     partner_number = "SELECT partner_id FROM partner WHERE partner_name = %s"
     firm = (firm_cb.get(),)
@@ -60,7 +60,7 @@ def get_pvc_order():
     month_dict = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X", 11: "XI",
                   12: "XII"}
     current_month = month_dict[date]
-    connection = mysql.connector.connect(host=my_host, port=my_port, user=my_user, password=my_pass, database=my_db)
+    connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     cursor.execute("SELECT month, pvc_counter FROM orders")
     record = cursor.fetchone()
@@ -100,7 +100,7 @@ def update_cb(event):
 
 # get name of firms from database for combobox
 def list_combobox():
-    connection = mysql.connector.connect(host=my_host, port=my_port, user=my_user, password=my_pass, database=my_db)
+    connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     cursor.execute("SELECT partner_name FROM partner")
     rows = cursor.fetchall()
@@ -149,7 +149,7 @@ def update_close_balance(event):
 
 # show firm report
 def firm_report():
-    connection = mysql.connector.connect(host=my_host, port=my_port, user=my_user, password=my_pass, database=my_db)
+    connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
 
     partner_number = "SELECT partner_id FROM partner WHERE partner_name = %s"
