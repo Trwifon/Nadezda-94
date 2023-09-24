@@ -9,10 +9,10 @@ import tkinter.font as tkFont
 total_sum = 0.0
 warehouse = 'Склад 1'
 dict_connection = {
-    'host': '127.0.0.1',
+    'host': '192.168.1.184',
     'port': '3306',
-    'user': 'root',
-    'password': '++++++++++++++++',
+    'user': 'trifon',
+    'password': 'Proba123+',
     'database': 'nadejda-94'
 }
 
@@ -230,8 +230,7 @@ def ok_button():
     insert_partner = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
     partner_data = (partner_close_balance, partner_id,)
 
-    connection = mysql.connector.connect(host='127.0.0.1', port='3306', user='root', password='jabbour',
-                                         database='nadejda-94')
+    connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     cursor.execute(insert_orders, order_data)
     cursor.execute(insert_partner, partner_data)
