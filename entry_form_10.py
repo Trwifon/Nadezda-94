@@ -7,11 +7,12 @@ from datetime import datetime
 import tkinter.font as tkFont
 
 total_sum = 0.0
+warehouse = 'Склад 1'
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
     'user': 'root',
-    'password': '++++',
+    'password': '++++++++++++++++',
     'database': 'nadejda-94'
 }
 
@@ -174,7 +175,7 @@ def firm_report():
     tree_firm_report = ttk.Treeview(firm_report_window, height=25)
     scrollbar.configure(command=tree_firm_report.yview)
     tree_firm_report.configure(yscrollcommand=scrollbar.set)
-    scrollbar.grid(row=0, rowspan=10, column=5, sticky="nsw")
+    scrollbar.grid(row=0, rowspan=25, column=5, sticky="nsw")
     tree_firm_report.grid(row=0, rowspan=20, column=0, sticky='nw')
     style = ttk.Style()
     style.configure('Treeview', font=('Helvetica', 9))
@@ -268,7 +269,7 @@ def_font.config(size=20)
 
 radio_var = tkinter.IntVar()
 
-warehouse = 'Склад 1'
+
 warehouse_label = ttk.Label(entry_window, width=10, text=warehouse, anchor="c", font=('Helvetica', 20))
 warehouse_label.grid(row=0, column=0, padx=40, pady=20)
 warehouse_label.configure(background='Light Grey')
@@ -361,4 +362,4 @@ entry_window.mainloop()
 
 
 # Да се отдели фирмен отчет в нов прозорец
-# Да се отделят аргументите на connection на едно място
+
