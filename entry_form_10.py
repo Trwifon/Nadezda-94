@@ -120,9 +120,10 @@ def getSelectedItem(event):
 
 # change selected radio button
 def sel():
-    selection = radio_var.get()
+    note_entry.delete(0, 'end')
     ammount_entry.delete(0, 'end')
     close_balance_label['text'] = ''
+    selection = radio_var.get()
     if selection == 1:
         note_entry.insert(0, get_pvc_order())
     else:
@@ -256,6 +257,7 @@ def ok_button():
     firm_cb.set('')
     open_balance_label['text'] = ''
     ammount_entry.delete(0, 'end')
+    radio_var.set(0)
     close_balance_label['text'] = ''
     note_entry.delete(0, 'end')
 
@@ -267,7 +269,6 @@ def_font = tk.font.nametofont("TkDefaultFont")
 def_font.config(size=20)
 
 radio_var = tkinter.IntVar()
-
 
 warehouse_label = ttk.Label(entry_window, width=10, text=warehouse, anchor="c", font=('Helvetica', 20))
 warehouse_label.grid(row=0, column=0, padx=40, pady=20)
@@ -284,12 +285,11 @@ firm_label = ttk.Label(entry_window, text='Фирма', font=('Helvetica', 20))
 firm_label.grid(row=1, column=0, padx=40, pady=5)
 
 lst = list_combobox()
-firm_cb = ttk.Combobox(entry_window, width=25, values=lst, font=('', 20))
+firm_cb = ttk.Combobox(entry_window, width=25, values=lst, font=('', 20), height=20)
 firm_cb.grid(row=1, column=1, sticky="w", padx=40, pady=20)
 entry_window.option_add('*TCombobox*Listbox.font', ('Helvetica', 15))
 firm_cb.bind('<KeyRelease>', update_cb)
 firm_cb.bind('<<ComboboxSelected>>', getSelectedItem)
-
 order_radio = ttk.Radiobutton(entry_window, text="Поръчка", variable=radio_var, value=1, command=sel)
 order_radio.grid(row=3, column=0, sticky="w", padx=40)
 cash_radio = ttk.Radiobutton(entry_window, text="Каса", variable=radio_var, value=0, command=sel)
@@ -360,5 +360,8 @@ tree_day_report.insert('', 2, values=())
 entry_window.mainloop()
 
 
-# Да се отдели фирмен отчет в нов прозорец
-
+# Connection db at the begining - only one and write it in the heading -close db automaticaly efter 10 hours
+# пресмятане на open balance непосредствено преди записа в базата данни(ОК) в една функция
+# поле за въвеждане на нова фирма
+# разгъване на комбобокс при въвеждане
+# архивиране и изпращане на базата данни
