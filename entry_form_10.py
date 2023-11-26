@@ -9,9 +9,9 @@ import tkinter.font as tkFont
 total_sum = 0.0
 warehouse = 'Склад 1'
 dict_connection = {
-    'host': '192.168.1.184',
+    'host': '127.0.0.1',
     'port': '3306',
-    'user': 'trifon',
+    'user': 'root',
     'password': 'Proba123+',
     'database': 'nadejda-94'
 }
@@ -27,6 +27,7 @@ def get_open_balance():
         sql = "SELECT partner_balance FROM partner WHERE partner_name = %s"
         cursor.execute(sql, firm)
         open_balance = cursor.fetchone()
+        open_balance_label['text'] = open_balance
         cursor.close()
         connection.close()
     return open_balance
@@ -113,10 +114,9 @@ def list_combobox():
 
 # input open balance of selected firm in balance label
 def getSelectedItem(event):
-    open_balance = get_open_balance()
     close_balance_label['text'] = ''
     ammount_entry.delete(0, 'end')
-    open_balance_label['text'] = open_balance
+    open_balance_label['text'] = get_open_balance()
 
 # change selected radio button
 def sel():
@@ -138,6 +138,7 @@ def update_close_balance(event):
     else:
         if open_balance_label.cget('text') != '' and ammount_entry.get() != '':
             float_open_balance = tuple_to_float(get_open_balance())
+
             ammount = ammount_entry.get()
             float_ammount = tuple_to_float(ammount)
             if radio_var.get() == 1:
@@ -214,8 +215,10 @@ def ok_button():
     insert_orders = ("INSERT INTO records (date, warehouse, partner_id, open_balance, order_type, ammount,"
                      " close_balance, note)"
                      "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
+
     partner_id = int(tuple_to_float(get_id()))
-    if partner_id == 1:
+    ammount_entry.bind('<KeyRelease>', update_close_balance)
+    if partner_id == 1 or partner_id == 2:
         partner_open_balance = 0.0
         partner_close_balance = 0.0
     else:
@@ -223,14 +226,12 @@ def ok_button():
         partner_close_balance = close_balance_label.cget('text')
     order_type = get_order_type()
     partner_ammount = ammount_entry.get()
-
     note = note_entry.get()
     order_data = (current_date, 1, partner_id, partner_open_balance, order_type, partner_ammount,
                   partner_close_balance, note)
 
     insert_partner = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
     partner_data = (partner_close_balance, partner_id,)
-
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     cursor.execute(insert_orders, order_data)
@@ -360,8 +361,15 @@ tree_day_report.insert('', 2, values=())
 entry_window.mainloop()
 
 
-# Connection db at the begining - only one and write it in the heading -close db automaticaly efter 10 hours
-# пресмятане на open balance непосредствено преди записа в базата данни(ОК) в една функция
+
+
+
+# пресмятане на open balance непосредствено преди записа в базата данни(ОК) в една функция - в момента е разхвърляно
+
+
+
+
 # поле за въвеждане на нова фирма
 # разгъване на комбобокс при въвеждане
 # архивиране и изпращане на базата данни
+# Connection db at the begining - only one and write it in the heading -close db automaticaly efter 10 hours
