@@ -6,8 +6,20 @@ from tkinter import ttk
 from datetime import datetime
 import tkinter.font as tkFont
 
-day_total_sum = 0.0
-warehouse = 'Склад 1'
+day_total_sum = 0
+main_dictionary = {
+    'date': datetime.now().date(),
+    'warehouse': 'Склад 1',
+    'partner_name': '',
+    'partner_id': 0,
+    'partner_type': '',
+    'open_balance': 0,
+    'order_type': '',
+    'amount': 0,
+    'close_balance': 0,
+    'note': '',
+    'production_order': ""
+}
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
@@ -16,45 +28,51 @@ dict_connection = {
     'database': 'nadejda-94'
 }
 
+def clear_main_dictionary():
+    global main_dictionary
+    main_dictionary = {
+        'date': datetime.now().date(),
+        'warehouse': 'Склад 1',
+        'partner_name': '',
+        'partner_id': 0,
+        'partner_type': '',
+        'open_balance': 0,
+        'order_type': '',
+        'amount': 0,
+        'close_balance': 0,
+        'note': '',
+        'production_order': ""
+    }
+
 # get balance of firms from database
-def get_open_balance():
-    firm = (firm_cb.get(),)
-    if firm == 'Клиент' or firm == 'Доставчик':
-        open_balance = 0
+def get_firm_data():
+    main_dictionary['partner_name'] = firm_cb.get()
+    if main_dictionary['partner_name'] == 'Клиент' or main_dictionary['partner_name'] == 'Доставчик':
+        main_dictionary['open_balance'] = 0
     else:
         connection = mysql.connector.connect(**dict_connection)
         cursor = connection.cursor()
-        sql = "SELECT partner_balance FROM partner WHERE partner_name = %s"
-        cursor.execute(sql, firm)
-        open_balance = cursor.fetchone()
-        open_balance_label['text'] = open_balance
+        partner_data = "SELECT partner_id, partner_type, partner_balance FROM partner WHERE partner_name = %s"
+        cursor.execute(partner_data, [main_dictionary['partner_name']])
+        data = cursor.fetchone()
+        main_dictionary['partner_id'] = data[0]
+        main_dictionary['partner_type'] = data[1]
+        main_dictionary['open_balance'] = int(data[2])
         cursor.close()
         connection.close()
-    return open_balance
-
-# get id of firms from database
-def get_id():
-    connection = mysql.connector.connect(**dict_connection)
-    cursor = connection.cursor()
-    partner_number = "SELECT partner_id FROM partner WHERE partner_name = %s"
-    firm = (firm_cb.get(),)
-    cursor.execute(partner_number, firm)
-    p_id = cursor.fetchone()
-    cursor.close()
-    connection.close()
-    return p_id
+    open_balance_label['text'] = main_dictionary['open_balance']
+    return
 
 # get order type
 def get_order_type():
-    global order_type
     selection = radio_var.get()
     if selection == 1:
-        order_type = 'Поръчка'
+        main_dictionary['order_type'] = 'Поръчка'
     elif selection == 0:
-        order_type = 'Каса'
+        main_dictionary['order_type'] = 'Каса'
     elif selection == 2:
-        order_type = 'Банка'
-    return order_type
+        main_dictionary['order_type'] = 'Банка'
+    return
 
 # get pvc order
 def get_pvc_order():
@@ -69,25 +87,15 @@ def get_pvc_order():
     month = record[0]
     pvc_counter = record[1]
     if current_month != month:
-        insert_month = ("UPDATE orders SET month = %s, pvc_counter = %s")
-        curr_month = (current_month, 1,)
-        cursor.execute(insert_month, curr_month)
+        change_month = ("UPDATE orders SET month = %s, pvc_counter = %s")
+        new_month = (current_month, 1,)
+        cursor.execute(change_month, new_month)
         pvc_counter = 1
     connection.commit()
     cursor.close()
     connection.close()
-    pvc_order = (f"P-{current_month}-{pvc_counter}")
-    return pvc_order
-
-# convert tuple to float number
-def tuple_to_float(tpl):
-    str_balance = str(tpl)
-    length = len(str_balance)
-    float_balance = ''
-    for i in range(0, length):
-        if 47 < ord(str_balance[i]) < 58 or 44 < ord(str_balance[i]) < 47:
-            float_balance = float_balance + str_balance[i]
-    return float(float_balance)
+    main_dictionary['production_order'] = (f"P-{current_month}-{pvc_counter}")
+    return
 
 # filter list of combobox when writing
 def update_cb(event):
@@ -114,41 +122,44 @@ def list_combobox():
 
 # input open balance of selected firm in balance label
 def getSelectedItem(event):
-    close_balance_label['text'] = ''
-    ammount_entry.delete(0, 'end')
-    open_balance_label['text'] = get_open_balance()
+    main_dictionary['close_balance'] = ''
+    close_balance_label['text'] = main_dictionary['close_balance']
+    main_dictionary['amount'] = ''
+    amount_entry.delete(0, 'end')
+    get_firm_data()
+    open_balance_label['text'] = main_dictionary['open_balance']
 
 # change selected radio button
 def sel():
+    main_dictionary['note'] = ''
     note_entry.delete(0, 'end')
-    ammount_entry.delete(0, 'end')
+    main_dictionary['amount'] = 0.0
+    amount_entry.delete(0, 'end')
+    main_dictionary['close_balance'] = ''
     close_balance_label['text'] = ''
     selection = radio_var.get()
     if selection == 1:
-        note_entry.insert(0, get_pvc_order())
-    else:
-        note_entry.delete(0, 'end')
+        get_pvc_order()
+        note_entry.insert(0, main_dictionary['production_order'])
     return selection
 
 # calculate close balance depending of radio button slection
 def update_close_balance(event):
-    firm = firm_cb.get()
-    if firm == 'Клиент' or firm == 'Доставчик':
-        close_balance_label['text'] = 0.0
+    get_firm_data()
+    get_order_type()
+    if main_dictionary['partner_name'] == 'Клиент' or main_dictionary['partner_name'] == 'Доставчик':
+        main_dictionary['close_balance'] = 0.0
     else:
-        if open_balance_label.cget('text') != '' and ammount_entry.get() != '':
-            float_open_balance = tuple_to_float(get_open_balance())
-
-            ammount = ammount_entry.get()
-            float_ammount = tuple_to_float(ammount)
-            if radio_var.get() == 1:
-                close_balance = float_open_balance - float_ammount
-                close_balance_label['text'] = close_balance
+        if main_dictionary['open_balance'] != '' and amount_entry.get() != '':
+            main_dictionary['amount'] = int(amount_entry.get())
+            if main_dictionary['order_type'] == 'Поръчка':
+                main_dictionary['close_balance'] = main_dictionary['open_balance'] - main_dictionary['amount']
             else:
-                close_balance = float_open_balance + float_ammount
-                close_balance_label['text'] = close_balance
+                main_dictionary['close_balance'] = main_dictionary['open_balance'] + main_dictionary['amount']
         else:
-            close_balance_label['text'] = ''
+            main_dictionary['close_balance'] = ''
+    close_balance_label['text'] = main_dictionary['close_balance']
+    return
 
 # show firm report
 def firm_report():
@@ -212,34 +223,24 @@ def firm_report():
 # write in database end close entry_window
 def ok_button():
     global day_total_sum
+    main_dictionary['note'] = note_entry.get()
     insert_orders = ("INSERT INTO records (date, warehouse, partner_id, open_balance, order_type, ammount,"
                      " close_balance, note)"
                      "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
 
-    partner_id = int(tuple_to_float(get_id()))
-    ammount_entry.bind('<KeyRelease>', update_close_balance)
-    if partner_id == 1 or partner_id == 2:
-        partner_open_balance = 0.0
-        partner_close_balance = 0.0
-    else:
-        partner_open_balance = tuple_to_float(open_balance_label.cget('text'))
-        partner_close_balance = close_balance_label.cget('text')
-    order_type = get_order_type()
-    partner_ammount = ammount_entry.get()
-    note = note_entry.get()
-    order_data = (current_date, 1, partner_id, partner_open_balance, order_type, partner_ammount,
-                  partner_close_balance, note)
-
+    order_data = (main_dictionary['date'], 1, main_dictionary['partner_id'], main_dictionary['open_balance'],
+                  main_dictionary['order_type'], main_dictionary['amount'], main_dictionary['close_balance'],
+                  main_dictionary['note'])
     insert_partner = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
-    partner_data = (partner_close_balance, partner_id,)
+    partner_data = (main_dictionary['close_balance'], main_dictionary['partner_id'])
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     cursor.execute(insert_orders, order_data)
     cursor.execute(insert_partner, partner_data)
 
-    if order_type == 'Поръчка':
+    if main_dictionary['order_type'] == 'Поръчка':
         cursor.execute("SELECT pvc_counter FROM orders")
-        pvc_counter = tuple_to_float(cursor.fetchone())
+        pvc_counter = int(cursor.fetchone()[0])
         pvc_counter += 1
         insert_pvc_count = "UPDATE orders SET pvc_counter = %s"
         current_counter = (pvc_counter,)
@@ -248,19 +249,22 @@ def ok_button():
     cursor.close()
     connection.close()
 
-    tree_day_report.insert('', 'end', values=(firm_cb.get(), order_type, partner_ammount, note))
-    if order_type == 'Каса':
-        total_sum += float(partner_ammount)
+    tree_day_report.insert('', 'end', values=(main_dictionary['partner_name'], main_dictionary['order_type'],
+                                              main_dictionary['amount'], main_dictionary['note']))
+    if main_dictionary['order_type'] == 'Каса':
+        day_total_sum += int(main_dictionary['amount'])
         selected_item = tree_day_report.get_children()[1]
         tree_day_report.delete(selected_item)
-        tree_day_report.insert('', 1, values=('', 'Наличност каса:', total_sum))
+        tree_day_report.insert('', 1, values=('', 'Наличност каса:', day_total_sum))
 
     firm_cb.set('')
     open_balance_label['text'] = ''
-    ammount_entry.delete(0, 'end')
+    amount_entry.delete(0, 'end')
     radio_var.set(0)
     close_balance_label['text'] = ''
     note_entry.delete(0, 'end')
+    clear_main_dictionary()
+    print(main_dictionary)
 
 # create entry window
 entry_window = tk.Tk()
@@ -271,13 +275,11 @@ def_font.config(size=20)
 
 radio_var = tkinter.IntVar()
 
-warehouse_label = ttk.Label(entry_window, width=10, text=warehouse, anchor="c", font=('Helvetica', 20))
+warehouse_label = ttk.Label(entry_window, width=10, text=main_dictionary['warehouse'], anchor="c", font=('Helvetica', 20))
 warehouse_label.grid(row=0, column=0, padx=40, pady=20)
 warehouse_label.configure(background='Light Grey')
 
-current_date = datetime.now()
-current_date_str = str(current_date.date())
-date_label = ttk.Label(entry_window, width=20, text=(current_date_str), anchor="c", font=('Helvetica', 20))
+date_label = ttk.Label(entry_window, width=20, text=(main_dictionary['date']), anchor="c", font=('Helvetica', 20))
 date_label.grid(row=0, column=1)
 
 date_label.configure(background='Light Grey')
@@ -307,9 +309,9 @@ close_balance_label.grid(row=6, column=1, sticky="e", padx=40)
 close_balance_label_text = ttk.Label(entry_window, text='Крайно салдо:', font=('Helvetica', 20))
 close_balance_label_text.grid(row=6, column=1, sticky="w", padx=40)
 
-ammount_entry = ttk.Entry(entry_window, width=10, font=('Helvetica', 20))
-ammount_entry.grid(row=4, column=1, sticky="w", padx=40)
-ammount_entry.bind('<KeyRelease>', update_close_balance)
+amount_entry = ttk.Entry(entry_window, width=10, font=('Helvetica', 20))
+amount_entry.grid(row=4, column=1, sticky="w", padx=40)
+amount_entry.bind('<KeyRelease>', update_close_balance)
 
 note_label = ttk.Label(entry_window, text='Забележка:', font=('Helvetica', 20))
 note_label.grid(row=8, column=0, padx=40, pady=20)
@@ -361,13 +363,7 @@ tree_day_report.insert('', 2, values=())
 entry_window.mainloop()
 
 
-
-
-
 # пресмятане на open balance непосредствено преди записа в базата данни(ОК) в една функция - в момента е разхвърляно
-
-
-
 
 # поле за въвеждане на нова фирма
 # разгъване на комбобокс при въвеждане
