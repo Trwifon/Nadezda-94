@@ -9,7 +9,7 @@ import tkinter.font as tkFont
 day_total_sum = 0
 main_dictionary = {
     'date': datetime.now().date(),
-    'warehouse': 'Склад 1',
+    'warehouse': 1,
     'partner_name': '',
     'partner_id': 0,
     'partner_type': '',
@@ -32,7 +32,7 @@ def clear_main_dictionary():
     global main_dictionary
     main_dictionary = {
         'date': datetime.now().date(),
-        'warehouse': 'Склад 1',
+        'warehouse': 1,
         'partner_name': '',
         'partner_id': 0,
         'partner_type': '',
@@ -220,6 +220,10 @@ def firm_report():
     tree_firm_report.insert('', 2, values=())
     tree_firm_report.mainloop()
 
+# new firm window
+def new_firm():
+    return
+
 # write in database end close entry_window
 def ok_button():
     global day_total_sum
@@ -228,7 +232,7 @@ def ok_button():
                      " close_balance, note)"
                      "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
 
-    order_data = (main_dictionary['date'], 1, main_dictionary['partner_id'], main_dictionary['open_balance'],
+    order_data = (main_dictionary['date'], main_dictionary['warehouse'], main_dictionary['partner_id'], main_dictionary['open_balance'],
                   main_dictionary['order_type'], main_dictionary['amount'], main_dictionary['close_balance'],
                   main_dictionary['note'])
     insert_partner = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
@@ -275,7 +279,8 @@ def_font.config(size=20)
 
 radio_var = tkinter.IntVar()
 
-warehouse_label = ttk.Label(entry_window, width=10, text=main_dictionary['warehouse'], anchor="c", font=('Helvetica', 20))
+warehouse_label = ttk.Label(entry_window, width=10, text=(f"Склад {main_dictionary['warehouse']}"),
+                            anchor="c", font=('Helvetica', 20))
 warehouse_label.grid(row=0, column=0, padx=40, pady=20)
 warehouse_label.configure(background='Light Grey')
 
@@ -318,12 +323,14 @@ note_label.grid(row=8, column=0, padx=40, pady=20)
 note_entry = ttk.Entry(entry_window, width=25, font=('Helvetica', 20))
 note_entry.grid(row=8, column=1, sticky="w", padx=40)
 
+new_firm_button = ttk.Button(entry_window, width=18, text='Нова фирма', command=new_firm)
+new_firm_button.grid(row=9, columnspan=2, column=0, sticky="w", padx=45, pady=20)
 firm_report_button = ttk.Button(entry_window, width=18, text='Фирмен отчет', command=firm_report)
 firm_report_button.grid(row=9, columnspan=2, column=0, sticky="e", padx=40, pady=20)
 ok_button = ttk.Button(entry_window, width=8, text='OK', command=ok_button)
-ok_button.grid(row=10, columnspan=2, column=0, sticky="w", padx=200, pady=20)
+ok_button.grid(row=10, columnspan=2, column=0, sticky="w", padx=192, pady=20)
 cancel_button = ttk.Button(entry_window, width=8, text='Cancel', command=entry_window.destroy)
-cancel_button.grid(row=10, columnspan=2, column=0, sticky="e", padx=200, pady=20)
+cancel_button.grid(row=10, columnspan=2, column=0, sticky="e", padx=190, pady=20)
 
 # day_report
 scrollbar = ttk.Scrollbar(entry_window, orient=tk.VERTICAL)
@@ -363,7 +370,7 @@ tree_day_report.insert('', 2, values=())
 entry_window.mainloop()
 
 
-# пресмятане на open balance непосредствено преди записа в базата данни(ОК) в една функция - в момента е разхвърляно
+
 
 # поле за въвеждане на нова фирма
 # разгъване на комбобокс при въвеждане
