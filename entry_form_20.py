@@ -9,7 +9,7 @@ import tkinter.font as tkFont
 day_total_sum = 0
 main_dictionary = {
     'date': datetime.now().date(),
-    'warehouse': 1,
+    'warehouse': 'PVC',
     'partner_name': '',
     'partner_id': 0,
     'partner_type': '',
@@ -28,11 +28,12 @@ dict_connection = {
     'database': 'nadejda-94'
 }
 
+# clear data from main dictionary
 def clear_main_dictionary():
     global main_dictionary
     main_dictionary = {
         'date': datetime.now().date(),
-        'warehouse': 1,
+        'warehouse': 'PVC',
         'partner_name': '',
         'partner_id': 0,
         'partner_type': '',
@@ -222,6 +223,18 @@ def firm_report():
 
 # new firm window
 def new_firm():
+
+    if note_entry.get() == '+++':
+        partner_name = firm_cb.get()
+        insert_new_partner = ("INSERT INTO partner (partner_name, partner_type, partner_balance) VALUES (%s, %s, %s)")
+        new_partner_data = (partner_name, 'Фирми', 0)
+        connection = mysql.connector.connect(**dict_connection)
+        cursor = connection.cursor()
+        cursor.execute(insert_new_partner, new_partner_data)
+        connection.commit()
+        cursor.close()
+        connection.close()
+
     return
 
 # write in database end close entry_window
@@ -235,12 +248,12 @@ def ok_button():
     order_data = (main_dictionary['date'], main_dictionary['warehouse'], main_dictionary['partner_id'], main_dictionary['open_balance'],
                   main_dictionary['order_type'], main_dictionary['amount'], main_dictionary['close_balance'],
                   main_dictionary['note'])
-    insert_partner = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
+    insert_partner_balance = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
     partner_data = (main_dictionary['close_balance'], main_dictionary['partner_id'])
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     cursor.execute(insert_orders, order_data)
-    cursor.execute(insert_partner, partner_data)
+    cursor.execute(insert_partner_balance, partner_data)
 
     if main_dictionary['order_type'] == 'Поръчка':
         cursor.execute("SELECT pvc_counter FROM orders")
@@ -268,7 +281,6 @@ def ok_button():
     close_balance_label['text'] = ''
     note_entry.delete(0, 'end')
     clear_main_dictionary()
-    print(main_dictionary)
 
 # create entry window
 entry_window = tk.Tk()
@@ -279,14 +291,12 @@ def_font.config(size=20)
 
 radio_var = tkinter.IntVar()
 
-warehouse_label = ttk.Label(entry_window, width=10, text=(f"Склад {main_dictionary['warehouse']}"),
+warehouse_label = ttk.Label(entry_window, width=20, text=(f"Склад {main_dictionary['warehouse']}"),
                             anchor="c", font=('Helvetica', 20))
-warehouse_label.grid(row=0, column=0, padx=40, pady=20)
+warehouse_label.grid(row=0, column=0, padx=20, pady=20)
 warehouse_label.configure(background='Light Grey')
-
 date_label = ttk.Label(entry_window, width=20, text=(main_dictionary['date']), anchor="c", font=('Helvetica', 20))
 date_label.grid(row=0, column=1)
-
 date_label.configure(background='Light Grey')
 
 firm_label = ttk.Label(entry_window, text='Фирма', font=('Helvetica', 20))
@@ -355,7 +365,7 @@ connection = mysql.connector.connect(**dict_connection)
 cursor = connection.cursor()
 cursor.execute("SELECT partner.partner_name, records.order_type, records.ammount, records.note FROM records INNER"
                " JOIN partner ON records.partner_id = partner.partner_id"
-               " WHERE warehouse = 1 and date = current_date")
+               " WHERE warehouse = 'PVC' and date = current_date")
 today_orders = cursor.fetchall()
 cursor.close()
 connection.close()
@@ -368,8 +378,6 @@ tree_day_report.insert('', 1, values=('', 'Наличност каса:', day_to
 tree_day_report.insert('', 2, values=())
 
 entry_window.mainloop()
-
-
 
 
 # поле за въвеждане на нова фирма
