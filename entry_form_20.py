@@ -380,7 +380,6 @@ tree_day_report.insert('', 2, values=())
 entry_window.mainloop()
 
 
-# поле за въвеждане на нова фирма
 # разгъване на комбобокс при въвеждане
 # архивиране и изпращане на базата данни
 # Connection db at the begining - only one and write it in the heading -close db automaticaly efter 10 hours
