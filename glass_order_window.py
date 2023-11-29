@@ -40,10 +40,10 @@ glass_entry_window.option_add('*TCombobox*Listbox.font', ('Helvetica', 15))
 
 # first_row
 firm_label = ttk.Label(glass_entry_window, width=20, text=('Фирма'), anchor="c", font=('Helvetica', 20))
-firm_label.grid(row=0, column=1, padx=20, pady=20)
+firm_label.grid(row=0, columnspan = 2, column=0, padx=10, pady=20)
 firm_label.configure(background='Light Grey')
 kind_label = ttk.Label(glass_entry_window, width=20, text=('Вид'), anchor="c", font=('Helvetica', 20))
-kind_label.grid(row=0, column=4, padx=20, pady=20)
+kind_label.grid(row=0, column=4, padx=10, pady=20)
 kind_label.configure(background='Light Grey')
 tickness_label = ttk.Label(glass_entry_window, width=10, text=('Дебелина'), anchor="c", font=('Helvetica', 20))
 tickness_label.grid(row=0, column=5, padx=20, pady=20)
@@ -52,11 +52,11 @@ tickness_label.configure(background='Light Grey')
 #second row
 firm_list = list_combobox()
 firm_cb = ttk.Combobox(glass_entry_window, width=25, values=firm_list, font=('', 20), height=20)
-firm_cb.grid(row=1, column=1, sticky="w", padx=20, pady=20)
+firm_cb.grid(row=1, columnspan = 2, column=0, sticky="w", padx=20, pady=20)
 # firm_cb.bind('<KeyRelease>', update_cb)
 # firm_cb.bind('<<ComboboxSelected>>', getSelectedItem)
 first_glass = ttk.Label(glass_entry_window, width=15, text=('Първо стъкло'), anchor="c", font=('Helvetica', 20))
-first_glass.grid(row=1, column=3, padx=10, pady=20)
+first_glass.grid(row=1, column=2, padx=10, pady=20)
 first_glass.configure(background='Light Grey')
 first_glass_cb = ttk.Combobox(glass_entry_window, width=15, values=list_glass, font=('', 20), height=20)
 first_glass_cb.grid(row=1, column=4, sticky="ew", padx=20, pady=20)
@@ -65,10 +65,10 @@ tickness_cb.grid(row=1, column=5, sticky="ew", padx=60, pady=20)
 
 #third row
 order_label = ttk.Label(glass_entry_window, width=20, text=('Поръчка'), anchor="c", font=('Helvetica', 20))
-order_label.grid(row=2, column=1, padx=20, pady=20)
+order_label.grid(row=2, columnspan = 2, column=0, padx=20, pady=20)
 order_label.configure(background='Light Grey')
 second_glass = ttk.Label(glass_entry_window, width=15, text=('Второ стъкло'), anchor="c", font=('Helvetica', 20))
-second_glass.grid(row=2, column=3, padx=10, pady=20)
+second_glass.grid(row=2, column=2, padx=10, pady=20)
 second_glass.configure(background='Light Grey')
 second_glass_cb = ttk.Combobox(glass_entry_window, width=15, values=list_glass, font=('', 20), height=20)
 second_glass_cb.grid(row=2, column=4, sticky="ew", padx=20, pady=20)
@@ -78,13 +78,27 @@ price_label.configure(background='Light Grey')
 
 #fourth row
 
-first_glass = ttk.Label(glass_entry_window, width=15, text=('Първо стъкло'), anchor="c", font=('Helvetica', 20))
-first_glass.grid(row=1, column=3, padx=10, pady=20)
-first_glass.configure(background='Light Grey')
-first_glass_cb = ttk.Combobox(glass_entry_window, width=15, values=list_glass, font=('', 20), height=20)
-first_glass_cb.grid(row=1, column=4, sticky="ew", padx=20, pady=20)
-tickness_cb = ttk.Combobox(glass_entry_window, width=3, values=tickness, font=('', 20), height=20)
-tickness_cb.grid(row=1, column=5, sticky="ew", padx=60, pady=20)
+third_glass = ttk.Label(glass_entry_window, width=15, text=('Трето стъкло'), anchor="c", font=('Helvetica', 20))
+third_glass.grid(row=3, column=2, padx=10, pady=20)
+third_glass.configure(background='Light Grey')
+third_glass_cb = ttk.Combobox(glass_entry_window, width=15, values=list_glass, font=('', 20), height=20)
+third_glass_cb.grid(row=3, column=4, sticky="ew", padx=20, pady=20)
+price_entry = ttk.Entry(glass_entry_window, width=3, font=('Helvetica', 20))
+price_entry.grid(row=3, column=5, sticky="ew", padx=50)
+
+#fifth row
+length = ttk.Label(glass_entry_window, width=15, text=('Първи размер'), anchor="c", font=('Helvetica', 20))
+length.grid(row=4, columnspan = 1, column=0, padx=10, pady=20)
+length.configure(background='Light Grey')
+width = ttk.Label(glass_entry_window, width=15, text=('Втори размер'), anchor="c", font=('Helvetica', 20))
+width.grid(row=4, columnspan = 2, column=1, padx=10, pady=20)
+width.configure(background='Light Grey')
+
+#sixth row
+length_entry = ttk.Entry(glass_entry_window, width=5, font=('Helvetica', 50))
+length_entry.grid(row=5, column=0, sticky="ew", padx=100, pady=20)
+width_entry = ttk.Entry(glass_entry_window, width=4, font=('Helvetica', 50))
+width_entry.grid(row=5, columnspan = 1, column=2, sticky="ew", padx=40, pady=20)
 
 
 
