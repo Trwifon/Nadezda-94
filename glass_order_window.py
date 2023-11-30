@@ -6,6 +6,8 @@ from tkinter import ttk
 from datetime import datetime
 import tkinter.font as tkFont
 
+data_dictionary = {'firm': '', 'order': '', 'length': 0, 'width': 0, 'count': 0, 'type': '', 'price': 0.0,
+                   'sum_count': 0,'sum_area': 0.0, 'sum_total': 0.0}
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
@@ -17,7 +19,7 @@ list_glass = ['4', '5', 'K', '4S']
 tickness = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 42, 44]
 list_month = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
 list_number = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
-
+order_list = []
 def list_combobox():
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
@@ -28,6 +30,27 @@ def list_combobox():
     cursor.close()
     connection.close()
     return firm_list
+
+def ok_button():
+    data_dictionary['firm'] = firm_cb.get()
+    data_dictionary['order'] = f"{order_label['text']}-{order_month_cb.get()}-{order_day_cb.get()}"
+    data_dictionary['length'], data_dictionary['width'], data_dictionary['count'] = \
+        int(length_entry.get()), int(width_entry.get()), int(count_entry.get())
+    if third_glass_cb.get() == "":
+        data_dictionary['type'] = f"{first_glass_cb.get()}+{second_glass_cb.get()}={tickness_cb.get()}"
+    else:
+        data_dictionary['type'] = f"{first_glass_cb.get()}+{second_glass_cb.get()}+{third_glass_cb.get()}={tickness_cb.get()}"
+    data_dictionary['price'] = float(price_entry.get())
+    data_dictionary['sum_count'] += int(count_entry.get())
+    current_area = data_dictionary['length'] * data_dictionary['width'] / 1000000
+    if current_area <= 0.3:
+        current_area = 0.3
+    data_dictionary['sum_area'] += current_area * int(count_entry.get())
+    data_dictionary['sum_total'] = data_dictionary['sum_area'] * data_dictionary['price']
+    order_list.append(data_dictionary)
+
+    print(order_list)
+
 
 # create entry window
 glass_entry_window = tk.Tk()
@@ -90,7 +113,8 @@ third_glass.grid(row=3, column=3, padx=10, pady=20)
 third_glass.configure(background='Light Grey')
 third_glass_cb = ttk.Combobox(glass_entry_window, width=15, values=list_glass, font=('', 20), height=20)
 third_glass_cb.grid(row=3, column=4, sticky="ew", padx=20, pady=20)
-price_entry = ttk.Entry(glass_entry_window, width=3, font=('Helvetica', 20))
+price_entry = ttk.Entry(glass_entry_window, width=3, justify='center', font=('Helvetica', 20))
+price_entry.insert(0, 55)
 price_entry.grid(row=3, column=5, sticky="ew", padx=50)
 
 # #fifth row
@@ -105,15 +129,18 @@ count_label.grid(row=4, column=4, padx=10, pady=20, sticky="w")
 count_label.configure(background='Light Grey')
 
 # #sixth row
-length_entry = ttk.Entry(glass_entry_window, width=4, font=('Helvetica', 50))
+length_entry = ttk.Entry(glass_entry_window, width=4, justify='center', font=('Helvetica', 50))
+length_entry.insert(0, 0)
 length_entry.grid(row=5, columnspan = 2, column=0, sticky="e", padx=40, pady=20)
-width_entry = ttk.Entry(glass_entry_window, width=3, font=('Helvetica', 50))
+width_entry = ttk.Entry(glass_entry_window, width=3,justify='center', font=('Helvetica', 50))
+width_entry.insert(0, 0)
 width_entry.grid(row=5, columnspan = 2, column=2, sticky="we", padx=80, pady=20)
-count_entry = ttk.Entry(glass_entry_window, width=3, font=('Helvetica', 50))
+count_entry = ttk.Entry(glass_entry_window, width=3, justify='center', font=('Helvetica', 50))
+count_entry.insert(2, 1)
 count_entry.grid(row=5, column=4, sticky="w", padx=10, pady=20)
-ok_button = ttk.Button(glass_entry_window, width=8, text='OK', )
+ok_button = ttk.Button(glass_entry_window, width=8, text='OK', command=ok_button)
 ok_button.grid(row=5, column=4, sticky="e", padx=10, pady=20)
-# command=ok_button
+
 ok_button = ttk.Button(glass_entry_window, width=8, text='Край', )
 ok_button.grid(row=5, column=5, padx=10, pady=20)
 
@@ -125,7 +152,7 @@ ok_button.grid(row=5, column=5, padx=10, pady=20)
 # cash_radio.grid(row=4, column=0, sticky="w", padx=40)
 # bank_radio = ttk.Radiobutton(glass_entry_window, text="Банка", variable=radio_var, value=2, command=sel)
 # bank_radio.grid(row=5, column=0, sticky="w", padx=40)
-#
+
 # open_balance_label = ttk.Label(glass_entry_window, width=10, text='', font=('Helvetica', 20))
 # open_balance_label.grid(row=2, column=1, sticky="e", padx=40)
 # open_balance_label_text = ttk.Label(glass_entry_window, text='Hачално салдо:', font=('Helvetica', 20))
