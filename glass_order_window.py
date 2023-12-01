@@ -20,6 +20,8 @@ tickness = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 42, 44]
 list_month = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
 list_number = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
 order_list = []
+
+
 def list_combobox():
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
@@ -33,9 +35,8 @@ def list_combobox():
 
 def ok_button():
     data_dictionary['firm'] = firm_cb.get()
-    data_dictionary['order'] = f"{order_label['text']}-{order_month_cb.get()}-{order_day_cb.get()}"
-    data_dictionary['length'], data_dictionary['width'], data_dictionary['count'] = \
-        int(length_entry.get()), int(width_entry.get()), int(count_entry.get())
+    data_dictionary['order'] = f"{order_label['text']}{order_month_cb.get()}-{order_day_cb.get()}"
+    data_dictionary['length'], data_dictionary['width'], data_dictionary['count'] = int(length_entry.get()), int(width_entry.get()), int(count_entry.get())
     if third_glass_cb.get() == "":
         data_dictionary['type'] = f"{first_glass_cb.get()}+{second_glass_cb.get()}={tickness_cb.get()}"
     else:
@@ -47,9 +48,23 @@ def ok_button():
         current_area = 0.3
     data_dictionary['sum_area'] += current_area * int(count_entry.get())
     data_dictionary['sum_total'] = data_dictionary['sum_area'] * data_dictionary['price']
-    order_list.append(data_dictionary)
+    order_list.append(data_dictionary.copy())
+    return
 
+def finish_button():
     print(order_list)
+    connection = mysql.connector.connect(**dict_connection)
+    cursor = connection.cursor()
+    insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, sum_area, sum_total) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+    for index in range(len(order_list)):
+        print(index)
+        order_data = (order_list[index]['firm'], 'proba', order_list[index]['length'], order_list[index]['width'], order_list[index]['count'], order_list[index]['type'], order_list[index]['price'], order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'])
+        print(order_data)
+        cursor.execute(insert_orders, order_data)
+        connection.commit()
+    cursor.close()
+    connection.close()
+    return
 
 
 # create entry window
@@ -141,44 +156,12 @@ count_entry.grid(row=5, column=4, sticky="w", padx=10, pady=20)
 ok_button = ttk.Button(glass_entry_window, width=8, text='OK', command=ok_button)
 ok_button.grid(row=5, column=4, sticky="e", padx=10, pady=20)
 
-ok_button = ttk.Button(glass_entry_window, width=8, text='Край', )
+ok_button = ttk.Button(glass_entry_window, width=8, text='Край', command=finish_button)
 ok_button.grid(row=5, column=5, padx=10, pady=20)
 
 
 
-# order_radio = ttk.Radiobutton(glass_entry_window, text="Поръчка", variable=radio_var, value=1, command=sel)
-# order_radio.grid(row=3, column=0, sticky="w", padx=40)
-# cash_radio = ttk.Radiobutton(glass_entry_window, text="Каса", variable=radio_var, value=0, command=sel)
-# cash_radio.grid(row=4, column=0, sticky="w", padx=40)
-# bank_radio = ttk.Radiobutton(glass_entry_window, text="Банка", variable=radio_var, value=2, command=sel)
-# bank_radio.grid(row=5, column=0, sticky="w", padx=40)
 
-# open_balance_label = ttk.Label(glass_entry_window, width=10, text='', font=('Helvetica', 20))
-# open_balance_label.grid(row=2, column=1, sticky="e", padx=40)
-# open_balance_label_text = ttk.Label(glass_entry_window, text='Hачално салдо:', font=('Helvetica', 20))
-# open_balance_label_text.grid(row=2, column=1, sticky="w", padx=40)
-# close_balance_label = ttk.Label(glass_entry_window, width=10, text='', font=('Helvetica', 20))
-# close_balance_label.grid(row=6, column=1, sticky="e", padx=40)
-# close_balance_label_text = ttk.Label(glass_entry_window, text='Крайно салдо:', font=('Helvetica', 20))
-# close_balance_label_text.grid(row=6, column=1, sticky="w", padx=40)
-#
-# amount_entry = ttk.Entry(glass_entry_window, width=10, font=('Helvetica', 20))
-# amount_entry.grid(row=4, column=1, sticky="w", padx=40)
-# amount_entry.bind('<KeyRelease>', update_close_balance)
-#
-# note_label = ttk.Label(glass_entry_window, text='Забележка:', font=('Helvetica', 20))
-# note_label.grid(row=8, column=0, padx=40, pady=20)
-# note_entry = ttk.Entry(glass_entry_window, width=25, font=('Helvetica', 20))
-# note_entry.grid(row=8, column=1, sticky="w", padx=40)
-#
-# new_firm_button = ttk.Button(glass_entry_window, width=18, text='Нова фирма', command=new_firm)
-# new_firm_button.grid(row=9, columnspan=2, column=0, sticky="w", padx=45, pady=20)
-# firm_report_button = ttk.Button(glass_entry_window, width=18, text='Фирмен отчет', command=firm_report)
-# firm_report_button.grid(row=9, columnspan=2, column=0, sticky="e", padx=40, pady=20)
-# ok_button = ttk.Button(glass_entry_window, width=8, text='OK', command=ok_button)
-# ok_button.grid(row=10, columnspan=2, column=0, sticky="w", padx=192, pady=20)
-# cancel_button = ttk.Button(glass_entry_window, width=8, text='Cancel', command=glass_entry_window.destroy)
-# cancel_button.grid(row=10, columnspan=2, column=0, sticky="e", padx=190, pady=20)
 #
 # # day_report
 # scrollbar = ttk.Scrollbar(glass_entry_window, orient=tk.VERTICAL)
@@ -218,6 +201,5 @@ ok_button.grid(row=5, column=5, padx=10, pady=20)
 glass_entry_window.mainloop()
 
 
-# разгъване на комбобокс при въвеждане
-# архивиране и изпращане на базата данни
-# Connection db at the begining - only one and write it in the heading -close db automaticaly efter 10 hours
+# не приема order
+# пренаписва dictionary
