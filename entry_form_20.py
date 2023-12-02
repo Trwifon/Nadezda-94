@@ -7,7 +7,7 @@ from datetime import datetime
 import tkinter.font as tkFont
 
 day_total_sum = 0
-main_dictionary = {
+empty_dictionary = {
     'date': datetime.now().date(),
     'warehouse': 'PVC',
     'partner_name': '',
@@ -20,6 +20,7 @@ main_dictionary = {
     'note': '',
     'production_order': ""
 }
+main_dictionary = empty_dictionary.copy()
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
@@ -31,19 +32,7 @@ dict_connection = {
 # clear data from main dictionary
 def clear_main_dictionary():
     global main_dictionary
-    main_dictionary = {
-        'date': datetime.now().date(),
-        'warehouse': 'PVC',
-        'partner_name': '',
-        'partner_id': 0,
-        'partner_type': '',
-        'open_balance': 0,
-        'order_type': '',
-        'amount': 0,
-        'close_balance': 0,
-        'note': '',
-        'production_order': ""
-    }
+    main_dictionary = empty_dictionary.copy()
 
 # get balance of firms from database
 def get_firm_data():
@@ -280,8 +269,9 @@ def ok_button():
     radio_var.set(0)
     close_balance_label['text'] = ''
     note_entry.delete(0, 'end')
+    print(main_dictionary)
     clear_main_dictionary()
-
+    print(main_dictionary)
 # create entry window
 entry_window = tk.Tk()
 entry_window.title('Форма за въвеждане')
