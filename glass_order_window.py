@@ -30,8 +30,7 @@ def list_combobox():
     connection.close()
     return firm_list
 
-def ok_button_press(event): #?
-    event.widget.config() #?
+def ok_button_press(event = None):
     data_dictionary['firm'] = firm_cb.get()
     data_dictionary['order'] = f"{order_label['text']}{order_month_cb.get()}-{order_day_cb.get()}"
     data_dictionary['length'], data_dictionary['width'], data_dictionary['count'] = \
@@ -51,7 +50,6 @@ def ok_button_press(event): #?
     order_list.append(data_dictionary.copy())
     length_entry.focus_set()
     length_entry.select_range(0, 4)
-    event.widget.invoke() #?
     return
 
 def finish_button():
@@ -154,7 +152,7 @@ count_label = ttk.Label(glass_entry_window, width=8, text=('Брой'), anchor="
 count_label.grid(row=4, column=4, padx=10, pady=20, sticky="w")
 count_label.configure(background='Light Grey')
 
-# #sixth row
+# sixth row
 length_entry = ttk.Entry(glass_entry_window, width=4, justify='center', font=('Helvetica', 50))
 length_entry.insert(0, 0)
 length_entry.grid(row=5, columnspan = 2, column=0, sticky="e", padx=40, pady=20)
@@ -164,10 +162,9 @@ width_entry.grid(row=5, columnspan = 2, column=2, sticky="we", padx=80, pady=20)
 count_entry = ttk.Entry(glass_entry_window, width=3, justify='center', font=('Helvetica', 50))
 count_entry.insert(2, 1)
 count_entry.grid(row=5, column=4, sticky="w", padx=10, pady=20)
-ok_button = ttk.Button(glass_entry_window, width=8, text='OK') #, command=ok_button_press
+ok_button = ttk.Button(glass_entry_window, width=8, text='OK', command=ok_button_press)
 ok_button.grid(row=5, column=4, sticky="e", padx=10, pady=20)
-ok_button.bind("<KeyRelease-Return>", ok_button_press) #?
-
+ok_button.bind("<KeyRelease-Return>", ok_button_press)
 finish_button = ttk.Button(glass_entry_window, width=8, text='Край', command=finish_button)
 finish_button.grid(row=5, column=5, padx=10, pady=20)
 tab_order()
