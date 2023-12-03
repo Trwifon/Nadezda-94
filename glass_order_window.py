@@ -1,13 +1,11 @@
-import tkinter
 import mysql.connector
 from mysql.connector import Error
 import tkinter as tk
 from tkinter import ttk
-from datetime import datetime
 import tkinter.font as tkFont
 
 data_dictionary = {'firm': '', 'order': '', 'length': 0, 'width': 0, 'count': 0, 'type': '', 'price': 0.0,
-                   'sum_count': 0,'sum_area': 0.0, 'sum_total': 0.0}
+                   'sum_count': 0, 'sum_area': 0.0, 'sum_total': 0.0}
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
@@ -21,7 +19,6 @@ list_month = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI',
 list_number = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
 order_list = []
 
-
 def list_combobox():
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
@@ -33,14 +30,17 @@ def list_combobox():
     connection.close()
     return firm_list
 
-def ok_button():
+def ok_button_press(event): #?
+    event.widget.config() #?
     data_dictionary['firm'] = firm_cb.get()
     data_dictionary['order'] = f"{order_label['text']}{order_month_cb.get()}-{order_day_cb.get()}"
-    data_dictionary['length'], data_dictionary['width'], data_dictionary['count'] = int(length_entry.get()), int(width_entry.get()), int(count_entry.get())
+    data_dictionary['length'], data_dictionary['width'], data_dictionary['count'] = \
+        int(length_entry.get()), int(width_entry.get()), int(count_entry.get())
     if third_glass_cb.get() == "":
         data_dictionary['type'] = f"{first_glass_cb.get()}+{second_glass_cb.get()}={tickness_cb.get()}"
     else:
-        data_dictionary['type'] = f"{first_glass_cb.get()}+{second_glass_cb.get()}+{third_glass_cb.get()}={tickness_cb.get()}"
+        data_dictionary['type'] = f"{first_glass_cb.get()}+{second_glass_cb.get()}+{third_glass_cb.get()}=" \
+                                  f"{tickness_cb.get()}"
     data_dictionary['price'] = float(price_entry.get())
     data_dictionary['sum_count'] += int(count_entry.get())
     current_area = data_dictionary['length'] * data_dictionary['width'] / 1000000
@@ -49,21 +49,31 @@ def ok_button():
     data_dictionary['sum_area'] += current_area * int(count_entry.get())
     data_dictionary['sum_total'] = data_dictionary['sum_area'] * data_dictionary['price']
     order_list.append(data_dictionary.copy())
+    length_entry.focus_set()
+    length_entry.select_range(0, 4)
+    event.widget.invoke() #?
     return
 
 def finish_button():
-    print(order_list)
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
-    insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, sum_area, sum_total) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+    insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
+                     "sum_area, sum_total) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
     for index in range(len(order_list)):
-        print(index)
-        order_data = (order_list[index]['firm'], 'proba', order_list[index]['length'], order_list[index]['width'], order_list[index]['count'], order_list[index]['type'], order_list[index]['price'], order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'])
-        print(order_data)
+        order_data = (order_list[index]['firm'], 'proba', order_list[index]['length'], order_list[index]['width'],
+                      order_list[index]['count'], order_list[index]['type'], order_list[index]['price'],
+                      order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'])
         cursor.execute(insert_orders, order_data)
         connection.commit()
     cursor.close()
     connection.close()
+    return
+
+def tab_order():
+    widgets = [firm_cb, order_month_cb, order_day_cb, first_glass_cb, second_glass_cb, third_glass_cb,
+               tickness_cb, price_entry, length_entry, width_entry, count_entry]
+    for element in widgets:
+        element.lift()
     return
 
 
@@ -92,6 +102,7 @@ tickness_label.configure(background='Light Grey')
 firm_list = list_combobox()
 firm_cb = ttk.Combobox(glass_entry_window, width=20, values=firm_list, font=('', 20), height=20)
 firm_cb.grid(row=1, columnspan = 3, column=0, sticky="we", padx=10, pady=20)
+firm_cb.focus_set()
 # firm_cb.bind('<KeyRelease>', update_cb)
 # firm_cb.bind('<<ComboboxSelected>>', getSelectedItem)
 first_glass = ttk.Label(glass_entry_window, width=13, text=('Първо стъкло'), anchor="c", font=('Helvetica', 20))
@@ -153,16 +164,16 @@ width_entry.grid(row=5, columnspan = 2, column=2, sticky="we", padx=80, pady=20)
 count_entry = ttk.Entry(glass_entry_window, width=3, justify='center', font=('Helvetica', 50))
 count_entry.insert(2, 1)
 count_entry.grid(row=5, column=4, sticky="w", padx=10, pady=20)
-ok_button = ttk.Button(glass_entry_window, width=8, text='OK', command=ok_button)
+ok_button = ttk.Button(glass_entry_window, width=8, text='OK') #, command=ok_button_press
 ok_button.grid(row=5, column=4, sticky="e", padx=10, pady=20)
+ok_button.bind("<KeyRelease-Return>", ok_button_press) #?
 
-ok_button = ttk.Button(glass_entry_window, width=8, text='Край', command=finish_button)
-ok_button.grid(row=5, column=5, padx=10, pady=20)
+finish_button = ttk.Button(glass_entry_window, width=8, text='Край', command=finish_button)
+finish_button.grid(row=5, column=5, padx=10, pady=20)
+tab_order()
 
 
 
-
-#
 # # day_report
 # scrollbar = ttk.Scrollbar(glass_entry_window, orient=tk.VERTICAL)
 # tree_day_report = ttk.Treeview(glass_entry_window, height=30)
@@ -200,6 +211,3 @@ ok_button.grid(row=5, column=5, padx=10, pady=20)
 
 glass_entry_window.mainloop()
 
-
-# не приема order
-# пренаписва dictionary
