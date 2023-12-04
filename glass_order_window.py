@@ -4,8 +4,9 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
 
-data_dictionary = {'firm': '', 'order': '', 'length': 0, 'width': 0, 'count': 0, 'type': '', 'price': 0.0,
-                   'sum_count': 0, 'sum_area': 0.0, 'sum_total': 0.0}
+empty_dictionary = {'firm': '', 'order': '', 'length': 0, 'width': 0, 'count': 0, 'type': '', 'price': 0.0,
+                   'sum_count': 0, 'sum_area': 0.0, 'sum_total': 0.0, 'done': False}
+data_dictionary = empty_dictionary.copy()
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
@@ -56,15 +57,17 @@ def finish_button():
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
     insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
-                     "sum_area, sum_total) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+                     "sum_area, sum_total, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
     for index in range(len(order_list)):
         order_data = (order_list[index]['firm'], 'proba', order_list[index]['length'], order_list[index]['width'],
                       order_list[index]['count'], order_list[index]['type'], order_list[index]['price'],
-                      order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'])
+                      order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'],
+                      order_list[index]['done'])
         cursor.execute(insert_orders, order_data)
         connection.commit()
     cursor.close()
     connection.close()
+    clear_form()
     return
 
 def tab_order():
@@ -72,6 +75,24 @@ def tab_order():
                tickness_cb, price_entry, length_entry, width_entry, count_entry]
     for element in widgets:
         element.lift()
+    return
+
+def clear_form():
+    data_dictionary = empty_dictionary.copy()
+    firm_cb.set('')
+    first_glass_cb.set('')
+    tickness_cb.set('')
+    second_glass_cb.set('')
+    order_day_cb.set('')
+    third_glass_cb.set('')
+    price_entry.delete(0, 5)
+    price_entry.insert(0, 0)
+    length_entry.delete(0, 5)
+    length_entry.insert(0, 0)
+    width_entry.delete(0, 5)
+    width_entry.insert(0, 0)
+    count_entry.delete(0, 5)
+    count_entry.insert(0, 1)
     return
 
 
@@ -138,8 +159,8 @@ third_glass.configure(background='Light Grey')
 third_glass_cb = ttk.Combobox(glass_entry_window, width=15, values=list_glass, font=('', 20), height=20)
 third_glass_cb.grid(row=3, column=4, sticky="ew", padx=20, pady=20)
 price_entry = ttk.Entry(glass_entry_window, width=3, justify='center', font=('Helvetica', 20))
-price_entry.insert(0, 55)
 price_entry.grid(row=3, column=5, sticky="ew", padx=50)
+price_entry.insert(0, 0)
 
 # #fifth row
 length_label = ttk.Label(glass_entry_window, width=13, text=('Първи размер'), anchor="c", font=('Helvetica', 20))
@@ -208,3 +229,6 @@ tab_order()
 
 glass_entry_window.mainloop()
 
+# finish button - clear entries
+# check orders - new window
+# how to change data if there are changes
