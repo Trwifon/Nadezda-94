@@ -49,7 +49,7 @@ def finish_button():
     insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
                      "sum_area, sum_total, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
     for index in range(len(order_list)):
-        order_data = (order_list[index]['firm'], 'proba', order_list[index]['length'], order_list[index]['width'],
+        order_data = (order_list[index]['firm'], order_list[index]['order'], order_list[index]['length'], order_list[index]['width'],
                       order_list[index]['count'], order_list[index]['type'], order_list[index]['price'],
                       order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'],
                       order_list[index]['done'])
