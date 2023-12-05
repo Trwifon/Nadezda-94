@@ -90,11 +90,7 @@ def get_pvc_order():
 # filter list of combobox when writing
 def update_cb(event):
     a = event.widget.get()
-    newvalues = []
-    # newvalues = [i for i in lst if a in i]
-    for i in lst:
-        if a.lower() in i.lower():
-            newvalues.append(i)
+    newvalues = [i for i in lst if a.lower() in i.lower()]
     firm_cb['values'] = newvalues
     firm_cb.focus()
 
@@ -272,6 +268,8 @@ def ok_button():
     print(main_dictionary)
     clear_main_dictionary()
     print(main_dictionary)
+
+
 # create entry window
 entry_window = tk.Tk()
 entry_window.title('Форма за въвеждане')
