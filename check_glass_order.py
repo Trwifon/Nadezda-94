@@ -108,10 +108,13 @@ def calculate_total():
 
 def ok_button_press():
     calculate_total()
+
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
 
-    cursor.execute("UPDATE pvc_glass_orders SET done = 2 WHERE order_id = 'PXI-239'")
+    data_update = "UPDATE pvc_glass_orders SET done = 2 WHERE order_id = %s"
+    order_id = (order_list[0]['order'],)
+    cursor.execute(data_update, order_id)
 
     insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
                      "sum_area, sum_total, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
@@ -121,6 +124,8 @@ def ok_button_press():
                       order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'],
                       order_list[index]['done'])
         cursor.execute(insert_orders, order_data)
+
+
 
     # cursor.execute("UPDATE records SET partner_balance = order_list[-1][sum_total] WHERE partner_name = order_list[-1]['firm']")
 
