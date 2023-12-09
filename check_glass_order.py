@@ -13,11 +13,14 @@ def get_data():
     order_id = ('PXI-239',)
     cursor.execute(get_order, order_id)
     rows = cursor.fetchall()
-    tree_order.insert('', 'end', values="Стара поръчка:")
-    print(rows)
     for row in rows:
         tree_order.insert('', 'end', values=row)
+    cursor.close()
+    connection.close()
+    return rows
 
+def set_record_dictionary(current_rows):
+    for row in current_rows:
         data_dictionary['firm'] =  row[0]
         data_dictionary['order'] =  row[1]
         data_dictionary['length'] =  int(row[2])
@@ -30,14 +33,15 @@ def get_data():
         data_dictionary['sum_total'] =  0.0
         data_dictionary['done'] =  row[10]
         order_list.append(data_dictionary.copy())
-    record_dictionary['old_total'], record_dictionary['note'] = float(rows[-1][9]), rows[-1][1]
+    record_dictionary['old_total'], record_dictionary['note'] = float(current_rows[-1][9]), current_rows[-1][1]
 
+    connection = mysql.connector.connect(**dict_connection)
+    cursor = connection.cursor()
     get_firm_id_and_balance = "SELECT partner_id, partner_balance FROM partner WHERE partner_name = %s"
     firm = (data_dictionary['firm'],)
     cursor.execute(get_firm_id_and_balance, firm)
     partner = cursor.fetchall()
     record_dictionary['firm_id'], record_dictionary['open_balance'] = int(partner[0][0]), float(partner[0][1])
-    print(record_dictionary)
 
     cursor.close()
     connection.close()
@@ -70,19 +74,14 @@ def clear_data():
     price_entry.delete(0,30)
     return
 
-def backward_button_press():
-    global index, clear_data
-    update_data_in_dictionary(index)
-    index -= 1
-    if index < 0:
-        index = 0
-    clear_data()
-    display_data(index)
-    return
-
 def forward_button_press():
-    global index
-    update_data_in_dictionary(index)
+    global index, change_flag
+    if kind_entry.get() != order_list[index]['type'] or int(length_entry.get()) != order_list[index]['length'] or \
+            int(width_entry.get()) != order_list[index]['width'] or \
+            int(count_entry.get()) != order_list[index]['count'] or \
+            float(price_entry.get()) != order_list[index]['price']:
+        change_flag = True
+        update_data_in_dictionary(index)
     index += 1
     if index == len(order_list):
         index = len(order_list) - 1
@@ -90,8 +89,22 @@ def forward_button_press():
     display_data(index)
     return
 
+def backward_button_press():
+    global index, change_flag
+    if kind_entry.get() != order_list[index]['type'] or int(length_entry.get()) != order_list[index]['length'] or \
+            int(width_entry.get()) != order_list[index]['width'] or \
+            int(count_entry.get()) != order_list[index]['count'] or \
+            float(price_entry.get()) != order_list[index]['price']:
+        change_flag = True
+        update_data_in_dictionary(index)
+    index -= 1
+    if index < 0:
+        index = 0
+    clear_data()
+    display_data(index)
+    return
+
 def calculate_total():
-    global change_flag
     for current_index in range(len(order_list)):
         current_area = order_list[current_index]['length'] * order_list[current_index]['width'] / 1000000
         if current_area <= 0.3:
@@ -106,10 +119,8 @@ def calculate_total():
     record_dictionary['new_total'] =  order_list[-1]['sum_total']
     if record_dictionary['new_total'] != record_dictionary['old_total']:
         record_dictionary['change_amount'] = record_dictionary['new_total'] - record_dictionary['old_total']
-        record_dictionary['close_balance'] = record_dictionary['open_balance'] + record_dictionary['change_amount']
-        change_flag = True
-    print(order_list)
-    return change_flag
+        record_dictionary['close_balance'] = record_dictionary['open_balance'] - record_dictionary['change_amount']
+    return
 
 def update_db():
     connection = mysql.connector.connect(**dict_connection)
@@ -149,14 +160,25 @@ def update_db():
     connection.close()
 
 def ok_button_press():
-    if calculate_total():
+    if change_flag:
+        calculate_total()
         update_db()
-        
+        tree_order.insert('', 'end', values='')
+        tree_order.insert('', 'end', values='Нова:')
+        get_data()
 
-
-
-
+        kind_entry['state'] = tk.DISABLED
+        length_entry['state'] = tk.DISABLED
+        width_entry['state'] = tk.DISABLED
+        count_entry['state'] = tk.DISABLED
+        price_entry['state'] = tk.DISABLED
+        left_button['state'] = tk.DISABLED
+        right_button['state'] = tk.DISABLED
+        ok_button['state'] = tk.DISABLED
     return
+
+def finish():
+    check_glass_entry_window.destroy()
 
 
 dict_connection = {
@@ -175,7 +197,6 @@ empty_record_dictionary = {"firm_id": 0, "old_total": 0.0, "new_total": 0.0, "ch
 record_dictionary = empty_record_dictionary.copy()
 index = 0
 change_flag = False
-
 
 # create entry window
 check_glass_entry_window = tk.Tk()
@@ -196,24 +217,26 @@ order_label.configure(background='Light Grey')
 #second row
 kind_entry = ttk.Entry(check_glass_entry_window, width=15, justify='center', font=('Helvetica', 20))
 kind_entry.grid(row=1, column=0, columnspan = 2, sticky="we", padx=10, pady=20)
+price_entry = ttk.Entry(check_glass_entry_window, width=5, justify='center', font=('Helvetica', 20))
+price_entry.grid(row=1, column=2, sticky="we", padx=10, pady=20)
 
 #third row
 length_entry = ttk.Entry(check_glass_entry_window, width=4, justify='center', font=('Helvetica', 20))
-length_entry.grid(row=2, column=0, padx=20, pady=20)
+length_entry.grid(row=2, column=0, sticky="w", padx=20, pady=20)
 width_entry = ttk.Entry(check_glass_entry_window, width=4,justify='center', font=('Helvetica', 20))
-width_entry.grid(row=2, column=1, padx=20, pady=20)
+width_entry.grid(row=2, column=0, sticky="e", padx=20, pady=20)
+count_entry = ttk.Entry(check_glass_entry_window, width=2, justify='center', font=('Helvetica', 20))
+count_entry.grid(row=2, column=1, padx=10, pady=20)
 left_button = ttk.Button(check_glass_entry_window, width=4, text='<-', command=backward_button_press)
 left_button.grid(row=2, column=2, sticky="w", padx=10, pady=20)
 right_button = ttk.Button(check_glass_entry_window, width=4, text='->', command=forward_button_press)
 right_button.grid(row=2, column=2, sticky="e", padx=10, pady=20)
 
 #fourth row
-count_entry = ttk.Entry(check_glass_entry_window, width=2, justify='center', font=('Helvetica', 20))
-count_entry.grid(row=3, column=0, padx=10, pady=20)
-price_entry = ttk.Entry(check_glass_entry_window, width=5,justify='center', font=('Helvetica', 20))
-price_entry.grid(row=3, column=1, padx=10, pady=20)
 ok_button = ttk.Button(check_glass_entry_window, width=8, text='OK', command=ok_button_press)
-ok_button.grid(row=3, column=2, sticky="e", padx=30, pady=20)
+ok_button.grid(row=3, column=0, sticky="e", padx=30, pady=20)
+finish_button = ttk.Button(check_glass_entry_window, width=8, text='Край', command=finish)
+finish_button.grid(row=3, column=2, sticky="e", padx=30, pady=20)
 
 # order
 scrollbar = ttk.Scrollbar(check_glass_entry_window, orient=tk.VERTICAL)
@@ -251,30 +274,9 @@ tree_order.heading('sum_area', text='Обща площ', anchor=tk.CENTER)
 tree_order.heading('sum_total', text='Сума', anchor=tk.CENTER)
 tree_order.heading('done', text='Изпълнено', anchor=tk.CENTER)
 
-order_data = get_data()
+tree_order.insert('', 'end', values="Стара:")
+order_data = set_record_dictionary(get_data())
 display_data(index)
-
-
-
-
-
-# connection = mysql.connector.connect(**dict_connection)
-# cursor = connection.cursor()
-# cursor.execute("SELECT partner.partner_name, records.order_type, records.ammount, records.note FROM records INNER"
-#                " JOIN partner ON records.partner_id = partner.partner_id"
-#                " WHERE warehouse = 'PVC' and date = current_date")
-# today_orders = cursor.fetchall()
-# cursor.close()
-# connection.close()
-# for row in today_orders:
-#     tree_day_report.insert('', 'end', values=row)
-#     if row[1] == 'Каса':
-#         day_total_sum += float(row[2])
-# tree_day_report.insert('', 0, values=())
-# tree_day_report.insert('', 1, values=('', 'Наличност каса:', day_total_sum))
-# tree_day_report.insert('', 2, values=())
-
-
 check_glass_entry_window.mainloop()
 
 
