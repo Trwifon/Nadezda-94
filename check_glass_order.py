@@ -3,6 +3,7 @@ from mysql.connector import Error
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
+from _datetime import datetime
 
 def get_data():
     connection = mysql.connector.connect(**dict_connection)
@@ -12,6 +13,7 @@ def get_data():
     order_id = ('PXI-239',)
     cursor.execute(get_order, order_id)
     rows = cursor.fetchall()
+    tree_order.insert('', 'end', values="Стара поръчка:")
     print(rows)
     for row in rows:
         tree_order.insert('', 'end', values=row)
@@ -89,57 +91,71 @@ def forward_button_press():
     return
 
 def calculate_total():
+    global change_flag
     for current_index in range(len(order_list)):
         current_area = order_list[current_index]['length'] * order_list[current_index]['width'] / 1000000
         if current_area <= 0.3:
             current_area = 0.3
         order_list[current_index]['sum_area'] += current_area * order_list[current_index]['count']
-        if current_index == 0:
-            order_list[current_index]['sum_count'] = order_list[current_index]['count']
-            order_list[current_index]['sum_total'] = order_list[current_index]['sum_area'] * \
-                                                     order_list[current_index]['price']
-        else:
-            order_list[current_index]['sum_count'] = order_list[current_index-1]['sum_count'] + \
-                                                     order_list[current_index]['count']
-            order_list[current_index]['sum_total'] = order_list[current_index-1]['sum_total'] + \
-                                                     order_list[current_index]['sum_area'] * \
-                                                     order_list[current_index]['price']
+        order_list[current_index]['sum_count'] = order_list[current_index]['count']
+        order_list[current_index]['sum_total'] = order_list[current_index]['sum_area'] * \
+                                                 order_list[current_index]['price']
+        if current_index > 0:
+            order_list[current_index]['sum_count'] += order_list[current_index-1]['sum_count']
+            order_list[current_index]['sum_total'] += order_list[current_index-1]['sum_total']
+    record_dictionary['new_total'] =  order_list[-1]['sum_total']
+    if record_dictionary['new_total'] != record_dictionary['old_total']:
+        record_dictionary['change_amount'] = record_dictionary['new_total'] - record_dictionary['old_total']
+        record_dictionary['close_balance'] = record_dictionary['open_balance'] + record_dictionary['change_amount']
+        change_flag = True
     print(order_list)
+    return change_flag
 
-def ok_button_press():
-    calculate_total()
-
+def update_db():
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
 
+    # mark order is updated
     data_update = "UPDATE pvc_glass_orders SET done = 2 WHERE order_id = %s"
     order_id = (order_list[0]['order'],)
     cursor.execute(data_update, order_id)
 
+    #insert new order
     insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
                      "sum_area, sum_total, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
     for index in range(len(order_list)):
-        order_data = (order_list[index]['firm'], order_list[index]['order'], order_list[index]['length'], order_list[index]['width'],
-                      order_list[index]['count'], order_list[index]['type'], order_list[index]['price'],
-                      order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'],
-                      order_list[index]['done'])
+        order_data = (
+        order_list[index]['firm'], order_list[index]['order'], order_list[index]['length'], order_list[index]['width'],
+        order_list[index]['count'], order_list[index]['type'], order_list[index]['price'],
+        order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'],
+        order_list[index]['done'])
         cursor.execute(insert_orders, order_data)
 
+    #update partner table
+    update_partner = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
+    data_update_partner = (record_dictionary['close_balance'], record_dictionary['firm_id'])
+    cursor.execute(update_partner, data_update_partner)
 
-
-    # cursor.execute("UPDATE records SET partner_balance = order_list[-1][sum_total] WHERE partner_name = order_list[-1]['firm']")
-
-
-    # cursor.execute("UPDATE pvc_glass_orders SET done = 2 WHERE order_id = 'PXI-239'")
-
-
-
-    # cursor.execute("SELECT firm, order_id, length, width, count, type, price, sum_count, sum_area, sum_total, "
-    #                "done FROM pvc_glass_orders WHERE order_id = 'PXI-239'")
-    # rows = cursor.fetchall()
+    #update records table
+    insert_orders = ("INSERT INTO records (date, warehouse, partner_id, open_balance, order_type, ammount,"
+                     " close_balance, note)"
+                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
+    order_data = (datetime.now().date(), 'Стъкла', record_dictionary['firm_id'], record_dictionary['open_balance'],
+                  'Промяна', record_dictionary['change_amount'], record_dictionary['close_balance'],
+                  record_dictionary['note'])
+    cursor.execute(insert_orders, order_data)
     connection.commit()
     cursor.close()
     connection.close()
+
+def ok_button_press():
+    if calculate_total():
+        update_db()
+        
+
+
+
+
     return
 
 
@@ -158,6 +174,7 @@ empty_record_dictionary = {"firm_id": 0, "old_total": 0.0, "new_total": 0.0, "ch
                            "close_balance": 0, "note": ''}
 record_dictionary = empty_record_dictionary.copy()
 index = 0
+change_flag = False
 
 
 # create entry window
