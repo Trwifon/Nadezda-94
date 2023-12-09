@@ -10,7 +10,7 @@ def get_data():
     cursor = connection.cursor()
     get_order = "SELECT firm, order_id, length, width, count, type, price, sum_count, sum_area, sum_total, " \
                 "done FROM pvc_glass_orders WHERE order_id = %s AND done = 0"
-    order_id = ('PXI-239',)
+    order_id = ('PXII-100',)
     cursor.execute(get_order, order_id)
     rows = cursor.fetchall()
     for row in rows:
@@ -180,7 +180,7 @@ def ok_button_press():
 def finish():
     check_glass_entry_window.destroy()
 
-
+#variables
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
@@ -280,6 +280,4 @@ display_data(index)
 check_glass_entry_window.mainloop()
 
 
-
-
-
+# get order number from glass_order_entry
