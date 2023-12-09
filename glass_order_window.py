@@ -3,6 +3,7 @@ from mysql.connector import Error
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
+from datetime import datetime
 
 def list_combobox():
     connection = mysql.connector.connect(**dict_connection)
@@ -43,9 +44,19 @@ def ok_button_press(event = None):
     length_entry.select_range(0, 4)
     return
 
-def finish_button():
+def update_db():
     connection = mysql.connector.connect(**dict_connection)
     cursor = connection.cursor()
+
+    #get firm data
+    get_firm_id_and_balance = "SELECT partner_id, partner_balance FROM partner WHERE partner_name = %s"
+    firm = (order_list[-1]['firm'],)
+    cursor.execute(get_firm_id_and_balance, firm)
+    partner = cursor.fetchall()
+    firm_id, open_balance = int(partner[0][0]), float(partner[0][1])
+    close_balance = open_balance - order_list[-1]['sum_total']
+
+    #insert odrder
     insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
                      "sum_area, sum_total, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
     for index in range(len(order_list)):
@@ -54,9 +65,28 @@ def finish_button():
                       order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'],
                       order_list[index]['done'])
         cursor.execute(insert_orders, order_data)
+
+    #update records
+    insert_orders = ("INSERT INTO records (date, warehouse, partner_id, open_balance, order_type, ammount,"
+                     " close_balance, note)"
+                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
+    order_data = (datetime.now().date(), 'Стъкла', firm_id, open_balance,
+                  'Поръчка', order_list[-1]['sum_total'], close_balance,
+                  order_list[-1]['order'])
+    cursor.execute(insert_orders, order_data)
+
+    #update partner
+    update_partner = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
+    data_update_partner = (close_balance, firm_id)
+    cursor.execute(update_partner, data_update_partner)
+
     connection.commit()
     cursor.close()
     connection.close()
+    return
+
+def finish_button():
+    update_db()
     clear_form()
     return
 
@@ -197,45 +227,7 @@ finish_button = ttk.Button(glass_entry_window, width=8, text='Край', command
 finish_button.grid(row=5, column=5, padx=10, pady=20)
 tab_order()
 
-
-
-# # order_report
-# scrollbar = ttk.Scrollbar(glass_entry_window, orient=tk.VERTICAL)
-# tree_day_report = ttk.Treeview(glass_entry_window, height=30)
-# tree_day_report['show'] = 'headings'
-# scrollbar.configure(command=tree_day_report.yview)
-# tree_day_report.configure(yscrollcommand=scrollbar.set)
-# scrollbar.grid(row=0, rowspan=15, column=5, sticky="nsw")
-# tree_day_report.grid(row=0, rowspan=20, column=4, sticky='ne')
-# style = ttk.Style()
-# style.configure('Treeview', font=('Helvetica', 10))
-# tree_day_report['columns'] = ('firm', 'action', 'ammount', 'note')
-# tree_day_report.column('firm', width=150, minwidth=50, anchor=tk.CENTER)
-# tree_day_report.column('action', width=100, minwidth=50, anchor=tk.CENTER)
-# tree_day_report.column('ammount', width=80, minwidth=50, anchor=tk.CENTER)
-# tree_day_report.column('note', width=420, minwidth=50, anchor=tk.CENTER)
-# tree_day_report.heading('firm', text='Фирма', anchor=tk.CENTER)
-# tree_day_report.heading('action', text='Действие', anchor=tk.CENTER)
-# tree_day_report.heading('ammount', text='Сума', anchor=tk.CENTER)
-# tree_day_report.heading('note', text='Забележка', anchor=tk.CENTER)
-# connection = mysql.connector.connect(**dict_connection)
-# cursor = connection.cursor()
-# cursor.execute("SELECT partner.partner_name, records.order_type, records.ammount, records.note FROM records INNER"
-#                " JOIN partner ON records.partner_id = partner.partner_id"
-#                " WHERE warehouse = 'PVC' and date = current_date")
-# today_orders = cursor.fetchall()
-# cursor.close()
-# connection.close()
-# for row in today_orders:
-#     tree_day_report.insert('', 'end', values=row)
-#     if row[1] == 'Каса':
-#         day_total_sum += float(row[2])
-# tree_day_report.insert('', 0, values=())
-# tree_day_report.insert('', 1, values=('', 'Наличност каса:', day_total_sum))
-# tree_day_report.insert('', 2, values=())
-
 glass_entry_window.mainloop()
 
 # finish button - clear entries
 # check orders - new window
-# how to change data if there are changes
