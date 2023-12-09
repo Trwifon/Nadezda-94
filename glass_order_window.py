@@ -54,7 +54,7 @@ def finish_button():
                       order_list[index]['sum_count'], order_list[index]['sum_area'], order_list[index]['sum_total'],
                       order_list[index]['done'])
         cursor.execute(insert_orders, order_data)
-        connection.commit()
+    connection.commit()
     cursor.close()
     connection.close()
     clear_form()
