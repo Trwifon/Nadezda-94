@@ -5,15 +5,21 @@ from tkinter import ttk
 import tkinter.font as tkFont
 from datetime import datetime
 
+dict_connection = {
+    'host': '127.0.0.1',
+    'port': '3306',
+    'user': 'root',
+    'password': 'Proba123+',
+    'database': 'nadejda-94'
+}
+connection = mysql.connector.connect(**dict_connection)
+cursor = connection.cursor()
+
 def list_combobox():
-    connection = mysql.connector.connect(**dict_connection)
-    cursor = connection.cursor()
     cursor.execute("SELECT partner_name FROM partner")
     rows = cursor.fetchall()
     firm_list = [i[0] for i in rows]
     firm_list.sort()
-    cursor.close()
-    connection.close()
     return firm_list
 
 def update_cb(event):
@@ -45,9 +51,6 @@ def ok_button_press(event = None):
     return
 
 def update_db():
-    connection = mysql.connector.connect(**dict_connection)
-    cursor = connection.cursor()
-
     #get firm data
     get_firm_id_and_balance = "SELECT partner_id, partner_balance FROM partner WHERE partner_name = %s"
     firm = (order_list[-1]['firm'],)
@@ -57,7 +60,7 @@ def update_db():
     close_balance = open_balance - order_list[-1]['sum_total']
 
     #insert odrder
-    insert_orders = ("INSERT INTO pvc_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
+    insert_orders = ("INSERT INTO glass_glass_orders (firm, order_id, length, width, count, type, price, sum_count, "
                      "sum_area, sum_total, done) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
     for index in range(len(order_list)):
         order_data = (order_list[index]['firm'], order_list[index]['order'], order_list[index]['length'], order_list[index]['width'],
@@ -81,13 +84,13 @@ def update_db():
     cursor.execute(update_partner, data_update_partner)
 
     connection.commit()
-    cursor.close()
-    connection.close()
     return
 
 def finish_button():
     update_db()
     clear_form()
+    cursor.close()
+    connection.close()
     return
 
 def tab_order():
@@ -115,17 +118,10 @@ def clear_form():
     count_entry.insert(0, 1)
     return
 
-
 empty_dictionary = {'firm': '', 'order': '', 'length': 0, 'width': 0, 'count': 0, 'type': '', 'price': 0.0,
                    'sum_count': 0, 'sum_area': 0.0, 'sum_total': 0.0, 'done': False}
 data_dictionary = empty_dictionary.copy()
-dict_connection = {
-    'host': '127.0.0.1',
-    'port': '3306',
-    'user': 'root',
-    'password': 'Proba123+',
-    'database': 'nadejda-94'
-}
+
 list_glass = ['4', '5', 'K', '4S']
 tickness = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 42, 44]
 list_month = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
@@ -183,7 +179,7 @@ price_label.grid(row=2, column=5, padx=20, pady=20)
 price_label.configure(background='Light Grey')
 
 #fourth row
-order_label = ttk.Label(glass_entry_window, width=3, text=('P'), anchor="c", font=('Helvetica', 20))
+order_label = ttk.Label(glass_entry_window, width=3, text=('C'), anchor="c", font=('Helvetica', 20))
 order_label.grid(row=3, column=0, sticky="e", padx=2, pady=20)
 order_label.configure(background='Light Grey')
 order_month_cb = ttk.Combobox(glass_entry_window, width=3, values=list_month, font=('', 20), height=20)
@@ -229,5 +225,4 @@ tab_order()
 
 glass_entry_window.mainloop()
 
-# finish button - clear entries
 # check orders - new window
