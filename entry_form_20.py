@@ -21,6 +21,7 @@ empty_dictionary = {
     'production_order': ""
 }
 main_dictionary = empty_dictionary.copy()
+
 dict_connection = {
     'host': '127.0.0.1',
     'port': '3306',
@@ -28,28 +29,31 @@ dict_connection = {
     'password': 'Proba123+',
     'database': 'nadejda-94'
 }
+connection = mysql.connector.connect(**dict_connection)
+cursor = connection.cursor()
 
 # clear data from main dictionary
 def clear_main_dictionary():
     global main_dictionary
     main_dictionary = empty_dictionary.copy()
+    return
 
 # get balance of firms from database
 def get_firm_data():
     main_dictionary['partner_name'] = firm_cb.get()
-    if main_dictionary['partner_name'] == 'Клиент' or main_dictionary['partner_name'] == 'Доставчик':
+    if main_dictionary['partner_name'] == 'Доставчик':
+        main_dictionary['partner_id'] = 1
+        main_dictionary['open_balance'] = 0
+    elif main_dictionary['partner_name'] == 'Клиент':
+        main_dictionary['partner_id'] = 2
         main_dictionary['open_balance'] = 0
     else:
-        connection = mysql.connector.connect(**dict_connection)
-        cursor = connection.cursor()
         partner_data = "SELECT partner_id, partner_type, partner_balance FROM partner WHERE partner_name = %s"
         cursor.execute(partner_data, [main_dictionary['partner_name']])
         data = cursor.fetchone()
         main_dictionary['partner_id'] = data[0]
         main_dictionary['partner_type'] = data[1]
         main_dictionary['open_balance'] = int(data[2])
-        cursor.close()
-        connection.close()
     open_balance_label['text'] = main_dictionary['open_balance']
     return
 
@@ -70,8 +74,6 @@ def get_pvc_order():
     month_dict = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X", 11: "XI",
                   12: "XII"}
     current_month = month_dict[date]
-    connection = mysql.connector.connect(**dict_connection)
-    cursor = connection.cursor()
     cursor.execute("SELECT month, pvc_counter FROM orders")
     record = cursor.fetchone()
     month = record[0]
@@ -82,8 +84,6 @@ def get_pvc_order():
         cursor.execute(change_month, new_month)
         pvc_counter = 1
     connection.commit()
-    cursor.close()
-    connection.close()
     main_dictionary['production_order'] = (f"P-{current_month}-{pvc_counter}")
     return
 
@@ -93,17 +93,14 @@ def update_cb(event):
     newvalues = [i for i in lst if a.lower() in i.lower()]
     firm_cb['values'] = newvalues
     firm_cb.focus()
+    return
 
 # get name of firms from database for combobox
 def list_combobox():
-    connection = mysql.connector.connect(**dict_connection)
-    cursor = connection.cursor()
     cursor.execute("SELECT partner_name FROM partner")
     rows = cursor.fetchall()
     lst = [i[0] for i in rows]
     lst.sort()
-    cursor.close()
-    connection.close()
     return lst
 
 # input open balance of selected firm in balance label
@@ -114,6 +111,7 @@ def getSelectedItem(event):
     amount_entry.delete(0, 'end')
     get_firm_data()
     open_balance_label['text'] = main_dictionary['open_balance']
+    return
 
 # change selected radio button
 def sel():
@@ -133,8 +131,12 @@ def sel():
 def update_close_balance(event):
     get_firm_data()
     get_order_type()
-    if main_dictionary['partner_name'] == 'Клиент' or main_dictionary['partner_name'] == 'Доставчик':
+    if main_dictionary['partner_name'] == 'Клиент':
         main_dictionary['close_balance'] = 0.0
+        main_dictionary['amount'] = int(amount_entry.get())
+    elif main_dictionary['partner_name'] == 'Доставчик':
+        main_dictionary['close_balance'] = 0.0
+        main_dictionary['amount'] = - int(amount_entry.get())
     else:
         if main_dictionary['open_balance'] != '' and amount_entry.get() != '':
             main_dictionary['amount'] = int(amount_entry.get())
@@ -149,9 +151,6 @@ def update_close_balance(event):
 
 # show firm report
 def firm_report():
-    connection = mysql.connector.connect(**dict_connection)
-    cursor = connection.cursor()
-
     partner_number = "SELECT partner_id FROM partner WHERE partner_name = %s"
     firm = (firm_cb.get(),)
     cursor.execute(partner_number, firm)
@@ -162,8 +161,6 @@ def firm_report():
                 " WHERE records.partner_id = %s")
     cursor.execute(f_report, p_id)
     firm_report = cursor.fetchall()
-    cursor.close()
-    connection.close()
 
     firm_report_window = tk.Tk()
     firm_report_window.title('Справка за фирма')
@@ -181,7 +178,7 @@ def firm_report():
     tree_firm_report['columns'] = ('date', 'warehouse', 'firm', 'open_balance', 'order_type', 'ammount', 'close_balance', 'note')
     tree_firm_report.column('#0', width=0)
     tree_firm_report.column('date', width=100, minwidth=20, anchor=tk.CENTER)
-    tree_firm_report.column('warehouse', width=50, minwidth=50, anchor=tk.CENTER)
+    tree_firm_report.column('warehouse', width=100, minwidth=50, anchor=tk.CENTER)
     tree_firm_report.column('firm', width=120, minwidth=50, anchor=tk.CENTER)
     tree_firm_report.column('open_balance', width=20, minwidth=50, anchor=tk.CENTER)
     tree_firm_report.column('order_type', width=80, minwidth=50, anchor=tk.CENTER)
@@ -205,21 +202,16 @@ def firm_report():
     tree_firm_report.insert('', 1, values=('', 'Крайно салдо:', total_sum))
     tree_firm_report.insert('', 2, values=())
     tree_firm_report.mainloop()
+    return
 
 # new firm window
 def new_firm():
-
     if note_entry.get() == '+++':
         partner_name = firm_cb.get()
         insert_new_partner = ("INSERT INTO partner (partner_name, partner_type, partner_balance) VALUES (%s, %s, %s)")
         new_partner_data = (partner_name, 'Фирми', 0)
-        connection = mysql.connector.connect(**dict_connection)
-        cursor = connection.cursor()
         cursor.execute(insert_new_partner, new_partner_data)
         connection.commit()
-        cursor.close()
-        connection.close()
-
     return
 
 # write in database end close entry_window
@@ -229,14 +221,11 @@ def ok_button():
     insert_orders = ("INSERT INTO records (date, warehouse, partner_id, open_balance, order_type, ammount,"
                      " close_balance, note)"
                      "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)")
-
     order_data = (main_dictionary['date'], main_dictionary['warehouse'], main_dictionary['partner_id'], main_dictionary['open_balance'],
                   main_dictionary['order_type'], main_dictionary['amount'], main_dictionary['close_balance'],
                   main_dictionary['note'])
     insert_partner_balance = "UPDATE partner SET partner_balance = %s WHERE partner_id = %s"
     partner_data = (main_dictionary['close_balance'], main_dictionary['partner_id'])
-    connection = mysql.connector.connect(**dict_connection)
-    cursor = connection.cursor()
     cursor.execute(insert_orders, order_data)
     cursor.execute(insert_partner_balance, partner_data)
 
@@ -248,8 +237,6 @@ def ok_button():
         current_counter = (pvc_counter,)
         cursor.execute(insert_pvc_count, current_counter)
     connection.commit()
-    cursor.close()
-    connection.close()
 
     tree_day_report.insert('', 'end', values=(main_dictionary['partner_name'], main_dictionary['order_type'],
                                               main_dictionary['amount'], main_dictionary['note']))
@@ -265,15 +252,13 @@ def ok_button():
     radio_var.set(0)
     close_balance_label['text'] = ''
     note_entry.delete(0, 'end')
-    print(main_dictionary)
     clear_main_dictionary()
-    print(main_dictionary)
-
+    return
 
 # create entry window
 entry_window = tk.Tk()
 entry_window.title('Форма за въвеждане')
-entry_window.geometry('1500x630')
+entry_window.geometry('1500x700')
 def_font = tk.font.nametofont("TkDefaultFont")
 def_font.config(size=20)
 
@@ -327,7 +312,7 @@ firm_report_button = ttk.Button(entry_window, width=18, text='Фирмен от�
 firm_report_button.grid(row=9, columnspan=2, column=0, sticky="e", padx=40, pady=20)
 ok_button = ttk.Button(entry_window, width=8, text='OK', command=ok_button)
 ok_button.grid(row=10, columnspan=2, column=0, sticky="w", padx=192, pady=20)
-cancel_button = ttk.Button(entry_window, width=8, text='Cancel', command=entry_window.destroy)
+cancel_button = ttk.Button(entry_window, width=8, text='Изход', command=entry_window.destroy)
 cancel_button.grid(row=10, columnspan=2, column=0, sticky="e", padx=190, pady=20)
 
 # day_report
@@ -344,19 +329,15 @@ tree_day_report['columns'] = ('firm', 'action', 'ammount', 'note')
 tree_day_report.column('firm', width=150, minwidth=50, anchor=tk.CENTER)
 tree_day_report.column('action', width=100, minwidth=50, anchor=tk.CENTER)
 tree_day_report.column('ammount', width=80, minwidth=50, anchor=tk.CENTER)
-tree_day_report.column('note', width=420, minwidth=50, anchor=tk.CENTER)
+tree_day_report.column('note', width=320, minwidth=50, anchor=tk.CENTER)
 tree_day_report.heading('firm', text='Фирма', anchor=tk.CENTER)
 tree_day_report.heading('action', text='Действие', anchor=tk.CENTER)
 tree_day_report.heading('ammount', text='Сума', anchor=tk.CENTER)
 tree_day_report.heading('note', text='Забележка', anchor=tk.CENTER)
-connection = mysql.connector.connect(**dict_connection)
-cursor = connection.cursor()
 cursor.execute("SELECT partner.partner_name, records.order_type, records.ammount, records.note FROM records INNER"
                " JOIN partner ON records.partner_id = partner.partner_id"
                " WHERE warehouse = 'PVC' and date = current_date")
 today_orders = cursor.fetchall()
-cursor.close()
-connection.close()
 for row in today_orders:
     tree_day_report.insert('', 'end', values=row)
     if row[1] == 'Каса':
@@ -370,4 +351,3 @@ entry_window.mainloop()
 
 # разгъване на комбобокс при въвеждане
 # архивиране и изпращане на базата данни
-# Connection db at the begining - only one and write it in the heading -close db automaticaly efter 10 hours
