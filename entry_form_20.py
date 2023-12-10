@@ -1,6 +1,5 @@
 import tkinter
 import mysql.connector
-from mysql.connector import Error
 import tkinter as tk
 from tkinter import ttk
 from datetime import datetime
@@ -9,7 +8,7 @@ import tkinter.font as tkFont
 day_total_sum = 0
 empty_dictionary = {
     'date': datetime.now().date(),
-    'warehouse': 'PVC',
+    'warehouse': 'Поръчки PVC',
     'partner_name': '',
     'partner_id': 0,
     'partner_type': '',
@@ -264,7 +263,7 @@ def_font.config(size=20)
 
 radio_var = tkinter.IntVar()
 
-warehouse_label = ttk.Label(entry_window, width=20, text=(f"Склад {main_dictionary['warehouse']}"),
+warehouse_label = ttk.Label(entry_window, width=20, text=(f"Склад: {main_dictionary['warehouse']}"),
                             anchor="c", font=('Helvetica', 20))
 warehouse_label.grid(row=0, column=0, padx=20, pady=20)
 warehouse_label.configure(background='Light Grey')
