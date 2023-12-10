@@ -1,5 +1,6 @@
 import mysql.connector
 import tkinter as tk
+from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox, filedialog
 import csv
@@ -32,7 +33,7 @@ def move_pvc():
 
 def move_glass():
     order_to_move = (select(glass_treeview),)
-    get_order = "SELECT firm, order_id, length, width, count, type FROM pvc_glass_orders WHERE order_id = %s " \
+    get_order = "SELECT firm, order_id, length, width, count, type FROM glass_glass_orders WHERE order_id = %s " \
                 "AND done = 0"
     cursor.execute(get_order, order_to_move)
     rows = cursor.fetchall()
@@ -43,7 +44,7 @@ def move_glass():
     cursor.execute(data_update, order_id)
     connection.commit()
     glass_treeview.delete(*glass_treeview.get_children())
-    cursor.execute("SELECT firm, order_id, length, width, count, type FROM pvc_glass_orders WHERE done = 0")
+    cursor.execute("SELECT firm, order_id, length, width, count, type FROM glass_glass_orders WHERE done = 0")
     rows = cursor.fetchall()
     for row in rows:
         glass_treeview.insert('', 'end', values=row)
@@ -86,13 +87,16 @@ glass_cutting_order.title = 'Файл за производство'
 glass_cutting_order.geometry('1500x750')
 
 cursor.execute("SELECT firm, order_id, length, width, count, type FROM pvc_glass_orders WHERE done = 0")
-rows = cursor.fetchall()
+rows_pvc = cursor.fetchall()
+cursor.execute("SELECT firm, order_id, length, width, count, type FROM glass_glass_orders WHERE done = 0")
+rows_glass = cursor.fetchall()
 
 pvc_treeview = ttk.Treeview(wrapper1, columns=(1,2,3,4,5,6), show='headings', height=30)
 pvc_treeview.pack()
-# yscrollbar = ttk.Scrollbar(glass_cutting_order, command=pvc_treeview.yview())
+# pvc_treeview.place(x=0, y=0)
+# yscrollbar = ttk.Scrollbar(wrapper1, orient='vertical', command=pvc_treeview.yview())
+# yscrollbar.pack(side=RIGHT,fill='y')
 # pvc_treeview.configure(yscrollcommand=yscrollbar.set)
-# yscrollbar.pack()
 
 pvc_treeview.heading(1, text='Фирма')
 pvc_treeview.heading(2, text='Поръчка')
@@ -122,9 +126,10 @@ glass_treeview.column(4, width=60)
 glass_treeview.column(5, width=50)
 glass_treeview.column(6, width=80)
 
-for row in rows:
-    glass_treeview.insert('', 'end', values=row)
+for row in rows_pvc:
     pvc_treeview.insert('', 'end', values=row)
+for row in rows_glass:
+    glass_treeview.insert('', 'end', values=row)
 
 result_treeview = ttk.Treeview(wrapper3, columns=(1,2,3,4,5,6), show='headings', height=30)
 result_treeview.pack()
@@ -149,3 +154,5 @@ export_button = tk.Button(wrapper3, text='Експорт', height=2, command=exp
 export_button.pack(pady=5)
 
 glass_cutting_order.mainloop()
+
+#from 0 to 1
