@@ -1,10 +1,9 @@
 import mysql.connector
-from mysql.connector import Error
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
-import tkinter.font as tkFont
-from _datetime import datetime
+from tkinter import messagebox, filedialog
+import csv
+import os
 
 def select(treeview):
     selected_item = treeview.focus()
@@ -20,7 +19,7 @@ def move_pvc():
     rows = cursor.fetchall()
     for row in rows:
         result_treeview.insert('', 'end', values=row)
-    data_update = "UPDATE pvc_glass_orders SET done = 1 WHERE order_id = %s AND done = 0"
+    data_update = "UPDATE pvc_glass_orders SET done = 0 WHERE order_id = %s AND done = 0"
     order_id = (select(pvc_treeview),)
     cursor.execute(data_update, order_id)
     connection.commit()
@@ -39,7 +38,7 @@ def move_glass():
     rows = cursor.fetchall()
     for row in rows:
         result_treeview.insert('', 'end', values=row)
-    data_update = "UPDATE pvc_glass_orders SET done = 1 WHERE order_id = %s AND done = 0"
+    data_update = "UPDATE pvc_glass_orders SET done = 0 WHERE order_id = %s AND done = 0"
     order_id = (select(glass_treeview),)
     cursor.execute(data_update, order_id)
     connection.commit()
@@ -49,6 +48,18 @@ def move_glass():
     for row in rows:
         glass_treeview.insert('', 'end', values=row)
     return
+
+def export_result():
+    file_name = filedialog.asksaveasfilename(initialdir=os.getcwd(), title='Save CSV', filetypes=(('CSV File', '*.csv'), ('all Files', '*.*')))
+    print(file_name)
+    with open(file_name, mode='w', newline='') as myfile:
+        exp_writer = csv.writer(myfile, delimiter=',')
+        for i in result_treeview.get_children():
+            row = result_treeview.item(i)['values']
+            row.insert(4, 'R')
+            row.insert(6, row[5])
+            print(row)
+            exp_writer.writerow(row)
 
 
 dict_connection = {
@@ -71,7 +82,6 @@ wrapper1.pack(side=tk.LEFT, fill='both', expand="yes", padx=5, pady=10)
 wrapper2.pack(side=tk.LEFT, fill='both', expand="yes", padx=5, pady=10)
 wrapper3.pack(side=tk.LEFT, fill='both', expand="yes", padx=5, pady=10)
 
-
 glass_cutting_order.title = 'Файл за производство'
 glass_cutting_order.geometry('1500x750')
 
@@ -80,6 +90,10 @@ rows = cursor.fetchall()
 
 pvc_treeview = ttk.Treeview(wrapper1, columns=(1,2,3,4,5,6), show='headings', height=30)
 pvc_treeview.pack()
+# yscrollbar = ttk.Scrollbar(glass_cutting_order, command=pvc_treeview.yview())
+# pvc_treeview.configure(yscrollcommand=yscrollbar.set)
+# yscrollbar.pack()
+
 pvc_treeview.heading(1, text='Фирма')
 pvc_treeview.heading(2, text='Поръчка')
 pvc_treeview.heading(3, text='Дължина')
@@ -112,7 +126,6 @@ for row in rows:
     glass_treeview.insert('', 'end', values=row)
     pvc_treeview.insert('', 'end', values=row)
 
-
 result_treeview = ttk.Treeview(wrapper3, columns=(1,2,3,4,5,6), show='headings', height=30)
 result_treeview.pack()
 result_treeview.heading(1, text='Фирма')
@@ -128,8 +141,11 @@ result_treeview.column(4, width=60)
 result_treeview.column(5, width=50)
 result_treeview.column(6, width=80)
 
-move_button = tk.Button(wrapper1, text='Прехвърли', height=2, command=move_pvc)
-move_button.pack(pady=5)
-move_button = tk.Button(wrapper2, text='Прехвърли', height=2, command=move_glass)
-move_button.pack(pady=5)
+move_pvc_button = tk.Button(wrapper1, text='Прехвърли', height=2, command=move_pvc)
+move_pvc_button.pack(pady=5)
+move_glass_button = tk.Button(wrapper2, text='Прехвърли', height=2, command=move_glass)
+move_glass_button.pack(pady=5)
+export_button = tk.Button(wrapper3, text='Експорт', height=2, command=export_result)
+export_button.pack(pady=5)
+
 glass_cutting_order.mainloop()
